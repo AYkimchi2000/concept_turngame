@@ -1,4 +1,4 @@
-// #region socket.io
+// #region imports init
 const socket = io();
 
 // #region global variables
@@ -16,19 +16,15 @@ const commandTree = {
             alone: () => console.log('you chose to go alone'),
             party: () => console.log('you chose to go with a party')
         }
-
+        
     }
 };
 
-
-
-
-
 // #endregion
 
-// #region global click events 
+// #region global mouse click events 
 document.getElementById("id_prompt_panel").addEventListener("click", event => {
-
+    // document.getElementById('id_command_input_box').focus();
 });
 // #endregion
 
@@ -166,18 +162,18 @@ document.getElementById("id_command_input_box").addEventListener("input", (event
         autoCompleteJS.data.src = [""]
     }
     else if (String(Object.keys(getSuggestions())) === "data.src") {
-        console.log("getsuggestion linked ot data.src!")
+        // console.log("getsuggestion successfuly linked to data.src!")
         autoCompleteJS.data.src = String(Object.values(getSuggestions())).split(',');
     }
     else {
         console.log("untagged query!")
         return
     }
-    console.log(
-        `getSuggestion() = ${getSuggestions()}\n` +
-        `getSuggestion() type is = ${typeof getSuggestions()}\n` +
-        `autoCompleteJS.data.src is = ${autoCompleteJS.data.src}\n`
-    );
+    // console.log(
+    //     `getSuggestion() = ${getSuggestions()}\n` +
+    //     `getSuggestion() type is = ${typeof getSuggestions()}\n` +
+    //     `autoCompleteJS.data.src is = ${autoCompleteJS.data.src}\n`
+    // );
 });
 
 // #endregion
@@ -224,12 +220,10 @@ const autoCompleteJS = new autoComplete({
         highlight: true,
     }
 });
-
 const input = document.getElementById("id_command_input_box");
 const suggestionsBox = document.getElementById("suggestions");
 let currentSuggestions = [];
 let node = commandTree
-//experiment
 function getSuggestions() { //this gets called everytime there's a value change in textbox
     const input_command_as_list = document.getElementById("id_command_input_box").value.trim().split(" ");
     let node = commandTree
@@ -256,7 +250,6 @@ function getSuggestions() { //this gets called everytime there's a value change 
     else if (current_segment_index > 0) { //if it is not the first segment
         for (let traverse_counter = 0; traverse_counter < current_segment_index; traverse_counter++) {
             if (input_command_as_list[traverse_counter] in node) {
-                console.log("ping")
                 node = node[input_command_as_list[traverse_counter]] //traverse using last segment   
             }
             //traverse to next layer anyways if current node is 
@@ -264,6 +257,9 @@ function getSuggestions() { //this gets called everytime there's a value change 
                 node = node[Object.keys(node)]
             }
             else {
+                return {
+                    "append": "No matching command!"
+                }
                 console.log("input_command_as_list[traverse_counter] not found in node")
             }
         }
@@ -290,7 +286,5 @@ function getSuggestions() { //this gets called everytime there's a value change 
         }
     }
 }
-
-
 
 // #endregion
