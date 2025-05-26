@@ -1,4 +1,3 @@
-// #region init express&socket
 const express = require('express');
 const { createServer } = require('node:http');
 const { join } = require('node:path');
@@ -10,43 +9,55 @@ const fs = require('fs');
 const { Command } = require('commander');
 const program = new Command();
 
-
-// gamestates
 let online_player_count = ""
 let online_party_list = ""
 let party_info = ""
 let created_character_data = ""
 
-// send files within the serve folder to client
-app.use(express.static('serve'));
 
-// user connect message
-io.on('connection', (socket) => {
-  console.log(`user ${socket.id} connected`);
-  socket.on('disconnect', () => {
-    console.log(`user ${socket.id} disconnected`);
-  });
-});
+
+
+app.use(express.static('serve'));
 
 // #region command parsing & execution
 io.on('connection', (socket) => {
+  let command_tree = {
+    test: {
+      rename: {
+        '{name}': (name) => io.to(socket.id).emit("server_broadcast_all", `hi there, ${name}`)
+      },
+      combat_init: {
+        alone: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight alone..."),
+        party: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight together..."),
+      },
+      char_select: {
+        clarissa: () => io.to(socket.id).emit("server_broadcast_all", "you selected clarissa as your character"),
+        chloe: () => io.to(socket.id).emit("server_broadcast_all", "you selected chloe as your character"),
+        mia: () => io.to(socket.id).emit("server_broadcast_all", "you selected mia as your character"),
+
+      },
+      enemy_select: {
+        goblin: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight a goblin"),
+        skeleton: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight a skeleton"),
+        wolves: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight wolves"),
+      },
+      party: {
+        invite: () => io.to(socket.id).emit("server_broadcast_all", "you chose to invite to a party"),
+        view_member: () => io.to(socket.id).emit("server_broadcast_all", "you are viewing party members"),
+      },
+    }
+  };
+  console.log(`user ${socket.id} connected`);
+  io.to(socket.id).emit("init_command_tree", command_tree )
+
+  socket.on('disconnect', () => {
+    console.log(`user ${socket.id} disconnected`);
+  });
+
   socket.on('client_command_input', (msg) => {
     console.log(`user ${socket.id} sent something`);
 
     // #region command tree + parsing
-    const commandTree = {
-      test: {
-        rename: {
-          '<name>': (name) => io.to(socket.id).emit("server_broadcast_all", `hi there, ${name}`)
-        },
-        combat_init: {
-          alone: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight alone...")
-          ,
-          party: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight together...")
-        }
-      }
-    };
-
     const descriptions = {
       main: 'Main command',
       test: 'Test command help',
@@ -56,16 +67,13 @@ io.on('connection', (socket) => {
       alone: 'Alone mode',
       party: 'Party mode'
     };
-    // reads the commanTree and feeds a Commander object that allows Commander.js to function
+    // reads the commanTree and outputs a Commander object that allows Commander.js to function
     function buildCommands(name, tree, descriptions = {}) {
-      const cmd = new Command(name);
+      const cmd = new Command(name); // instancing new commander object as cmd
       cmd.exitOverride(); // Set exitOverride on every command
-
       if (descriptions[name]) cmd.description(descriptions[name]);
-
       for (const key in tree) {
         const val = tree[key];
-
         if (typeof val === 'function') {
           cmd.command(key)
             .description(descriptions[key] || '')
@@ -91,8 +99,7 @@ io.on('connection', (socket) => {
 
       return cmd;
     }
-
-    const program = buildCommands('main', commandTree, descriptions);
+    const program = buildCommands('main', command_tree, descriptions);
     program.exitOverride();
     program.helpInformation = () => {
       return 'Custom help message goes here';
@@ -100,9 +107,9 @@ io.on('connection', (socket) => {
     program.commands.find(cmd => cmd.name() === 'test').helpInformation = () => {
       return 'this is help message for test';
     };
-    x = msg.split(" ")
+    x = msg.trim().split(" ")
     try {
-      program.parse(x, { from: 'user' });  // <-- important: avoids reading from process.argv
+      program.parse(x, { from: 'user' }); 
     } catch (err) {
       if (err.exitCode !== undefined) {
         // It's a CommanderError
@@ -131,23 +138,6 @@ server.listen(3000, () => {
 });
 
 
-// test
-//   rename
-//     user_input_name
-//   combat_init
-//     y/n
-//   char_select
-//     elliot
-//     clarissa
-//     mia
-//   enemy_select
-//     goblin
-//     skeleton
-//     wolves
-//   party
-//     playername
-//     view_member
-//     invite
 
 
 

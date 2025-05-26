@@ -7,24 +7,43 @@ let historyIndex = 0;
 let no_result_visibility = true;
 let autocomplete_visibility = false;
 let tab_panel_visible = false;
-const commandTree = {
+let client_command_tree = {}
+let local_command_tree = {
     test: {
         rename: {
-            '{name}': (name) => io.to(socket.id).emit("server_broadcast_all", `hi there, ${name}`),
+            '{name}': (name) => io.to(socket.id).emit("server_broadcast_all", `hi there, ${name}`)
         },
         combat_init: {
-            alone: () => console.log('you chose to go alone'),
-            party: () => console.log('you chose to go with a party')
-        }
-        
+            alone: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight alone..."),
+            party: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight together..."),
+        },
+        char_select: {
+            clarissa: () => io.to(socket.id).emit("server_broadcast_all", "you selected clarissa as your character"),
+            chloe: () => io.to(socket.id).emit("server_broadcast_all", "you selected chloe as your character"),
+            mia: () => io.to(socket.id).emit("server_broadcast_all", "you selected mia as your character"),
+
+        },
+        enemy_select: {
+            goblin: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight a goblin"),
+            skeleton: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight a skeleton"),
+            wolves: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight wolves"), 
+        },
+        party: {
+            invite: () => io.to(socket.id).emit("server_broadcast_all", "you chose to invite to a party"), 
+            view_member: () => io.to(socket.id).emit("server_broadcast_all", "you are viewing party members"), 
+        },
     }
 };
+    
+socket.on('init_command_tree', (command_tree) => {
+    client_command_tree = command_tree
+});
 
 // #endregion
 
 // #region global mouse click events 
 document.getElementById("id_prompt_panel").addEventListener("click", event => {
-    // document.getElementById('id_command_input_box').focus();
+    document.getElementById('id_command_input_box').focus();
 });
 // #endregion
 
@@ -66,10 +85,6 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
             clone_of_previous_textrow.removeAttribute('id');
 
 
-            //construct last input row element
-
-
-
             //construct response row element 
             const response_row_container = document.createElement('div');
             const response_row_prefix = document.createElement('div');
@@ -87,9 +102,7 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
                 case 'who':
                     response_row_content.textContent = 'I am arthur!';
                 case 'connect':
-
-
-                default:
+                default: //remote command response if 
                     document.getElementById('id_text_row_container').style.display = 'none';
                     document.getElementById('id_command_input_box').disabled = true;
                     let count = 0;
@@ -109,11 +122,10 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
 
 
             }
+            
             //insert element to page
             document.getElementById("id_text_interface_container").insertBefore(clone_of_previous_textrow, document.getElementById("id_text_row_container")); // insert previous text row element
             document.getElementById("id_text_interface_container").insertBefore(response_row_container, document.getElementById("id_text_row_container")); // insert server response row element
-
-
             document.getElementById('id_command_input_box').value = ""; // clear text input box
 
 
@@ -169,11 +181,11 @@ document.getElementById("id_command_input_box").addEventListener("input", (event
         console.log("untagged query!")
         return
     }
-    // console.log(
-    //     `getSuggestion() = ${getSuggestions()}\n` +
-    //     `getSuggestion() type is = ${typeof getSuggestions()}\n` +
-    //     `autoCompleteJS.data.src is = ${autoCompleteJS.data.src}\n`
-    // );
+    console.log(
+        `getSuggestion() = ${getSuggestions()}\n` +
+        `getSuggestion() type is = ${typeof getSuggestions()}\n` +
+        `autoCompleteJS.data.src is = ${autoCompleteJS.data.src}\n`
+    );
 });
 
 // #endregion
@@ -223,10 +235,9 @@ const autoCompleteJS = new autoComplete({
 const input = document.getElementById("id_command_input_box");
 const suggestionsBox = document.getElementById("suggestions");
 let currentSuggestions = [];
-let node = commandTree
 function getSuggestions() { //this gets called everytime there's a value change in textbox
     const input_command_as_list = document.getElementById("id_command_input_box").value.trim().split(" ");
-    let node = commandTree
+    let node = client_command_tree
     let endsWithSpace = document.getElementById("id_command_input_box").value.endsWith(" ");
     let current_segment_index = endsWithSpace ? input_command_as_list.length : input_command_as_list.length - 1;
     //current_segment_index, "test" = 0, "test " = 1, "test rename" = 1, "test rename " = 2
