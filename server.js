@@ -14,6 +14,17 @@ let online_party_list = ""
 let party_info = ""
 let created_character_data = ""
 
+
+const help_descriptions = {
+  main: 'Main command',
+  test: 'Test command help',
+  rename: 'Rename something',
+  '<name>': 'Name argument help',
+  combat_init: 'Combat setup',
+  alone: 'Alone mode',
+  party: 'Party mode'
+};
+
 function deepCloneAndModify(source) {
   const target = {}; 
   for (const key in source) {
@@ -27,12 +38,58 @@ function deepCloneAndModify(source) {
   }
   return target; 
 }
+function buildCommands(name, tree, descriptions = {}) {
+  const cmd = new Command(name);
+  cmd.exitOverride();
+  if (descriptions[name]) {
+    cmd.description(descriptions[name]);
+  }
+  else { console.log(`error no help message tree found`) }
+  //
+  //
+  for (const key in tree) {
+    const val = tree[key];
+    if (typeof val === 'function') {
+      cmd.command(key)
+        .description(descriptions[key] || '')
+        .action(val)
+        .exitOverride();
+    } else {
+      const subKeys = Object.keys(val);
+      const isArgCommand = subKeys.length === 1 && (subKeys[0].startsWith('{') || subKeys[0].startsWith('['));
+      if (isArgCommand) {
+        const [arg] = subKeys;
+        const fn = val[arg];
+        const subCmd = new Command(key);
+        subCmd.exitOverride();
+        if (descriptions[key]) subCmd.description(descriptions[key]);
+        subCmd.argument(arg).action(fn);
+        cmd.addCommand(subCmd);
+      } else {
+        const subCmd = buildCommands(key, val, descriptions);
+        cmd.addCommand(subCmd);
+      }
+    }
+  }
 
+  return cmd;
+}
 
 app.use(express.static('serve'));
 
 
 io.on('connection', (socket) => {
+  console.log(`user ${socket.id} connected`);
+  socket.on('disconnect', () => {
+    console.log(`user ${socket.id} disconnected`);
+  });
+  
+
+
+
+
+
+
   let command_tree = {
     test: {
       rename: {
@@ -59,60 +116,21 @@ io.on('connection', (socket) => {
       },
     }
   };
-  let modified_command_tree = deepCloneAndModify(command_tree) //command_tree with every function into strings
+  let modified_command_tree = deepCloneAndModify(command_tree)
   io.to(socket.id).emit("init_command_tree", modified_command_tree)
   
-  console.log(`user ${socket.id} connected`);
 
-  socket.on('disconnect', () => {
-    console.log(`user ${socket.id} disconnected`);
-  });
+
+
+
+
+
 
   socket.on('client_command_input', (msg) => {
     console.log(`user ${socket.id} sent something`);
-
+    
     // #region command tree + parsing
-    const descriptions = {
-      main: 'Main command',
-      test: 'Test command help',
-      rename: 'Rename something',
-      '<name>': 'Name argument help',
-      combat_init: 'Combat setup',
-      alone: 'Alone mode',
-      party: 'Party mode'
-    };
-    function buildCommands(name, tree, descriptions = {}) {
-      const cmd = new Command(name);
-      cmd.exitOverride(); 
-      if (descriptions[name]) cmd.description(descriptions[name]);
-      for (const key in tree) {
-        const val = tree[key];
-        if (typeof val === 'function') {
-          cmd.command(key)
-            .description(descriptions[key] || '')
-            .action(val)
-            .exitOverride();
-        } else {
-          const subKeys = Object.keys(val);
-          const isArgCommand = subKeys.length === 1 && (subKeys[0].startsWith('{') || subKeys[0].startsWith('['));
-          if (isArgCommand) {
-            const [arg] = subKeys;
-            const fn = val[arg];
-            const subCmd = new Command(key);
-            subCmd.exitOverride(); 
-            if (descriptions[key]) subCmd.description(descriptions[key]);
-            subCmd.argument(arg).action(fn);
-            cmd.addCommand(subCmd);
-          } else {
-            const subCmd = buildCommands(key, val, descriptions);
-            cmd.addCommand(subCmd);
-          }
-        }
-      }
-
-      return cmd;
-    }
-    const program = buildCommands('main', command_tree, descriptions);
+    const program = buildCommands('main', command_tree, help_descriptions);
     program.exitOverride();
     program.helpInformation = () => {
       return 'Custom help message goes here';
@@ -139,7 +157,30 @@ io.on('connection', (socket) => {
     
   });
 });
-// #endregion
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
