@@ -14,12 +14,24 @@ let online_party_list = ""
 let party_info = ""
 let created_character_data = ""
 
-
+function deepCloneAndModify(source) {
+  const target = {}; 
+  for (const key in source) {
+    if (typeof source[key] === 'object' && source[key] !== null) {
+      target[key] = deepCloneAndModify(source[key]);
+    } else if (typeof source[key] === 'function') {
+      target[key] = 'function';
+    } else {
+      target[key] = source[key];
+    }
+  }
+  return target; 
+}
 
 
 app.use(express.static('serve'));
 
-// #region command parsing & execution
+
 io.on('connection', (socket) => {
   let command_tree = {
     test: {
@@ -47,8 +59,10 @@ io.on('connection', (socket) => {
       },
     }
   };
+  let modified_command_tree = deepCloneAndModify(command_tree) //command_tree with every function into strings
+  io.to(socket.id).emit("init_command_tree", modified_command_tree)
+  
   console.log(`user ${socket.id} connected`);
-  io.to(socket.id).emit("init_command_tree", command_tree )
 
   socket.on('disconnect', () => {
     console.log(`user ${socket.id} disconnected`);
@@ -67,10 +81,9 @@ io.on('connection', (socket) => {
       alone: 'Alone mode',
       party: 'Party mode'
     };
-    // reads the commanTree and outputs a Commander object that allows Commander.js to function
     function buildCommands(name, tree, descriptions = {}) {
-      const cmd = new Command(name); // instancing new commander object as cmd
-      cmd.exitOverride(); // Set exitOverride on every command
+      const cmd = new Command(name);
+      cmd.exitOverride(); 
       if (descriptions[name]) cmd.description(descriptions[name]);
       for (const key in tree) {
         const val = tree[key];
@@ -78,15 +91,15 @@ io.on('connection', (socket) => {
           cmd.command(key)
             .description(descriptions[key] || '')
             .action(val)
-            .exitOverride(); // Also set on inline subcommands
+            .exitOverride();
         } else {
           const subKeys = Object.keys(val);
-          const isArgCommand = subKeys.length === 1 && (subKeys[0].startsWith('<') || subKeys[0].startsWith('['));
+          const isArgCommand = subKeys.length === 1 && (subKeys[0].startsWith('{') || subKeys[0].startsWith('['));
           if (isArgCommand) {
             const [arg] = subKeys;
             const fn = val[arg];
             const subCmd = new Command(key);
-            subCmd.exitOverride(); // Also here
+            subCmd.exitOverride(); 
             if (descriptions[key]) subCmd.description(descriptions[key]);
             subCmd.argument(arg).action(fn);
             cmd.addCommand(subCmd);
@@ -112,11 +125,9 @@ io.on('connection', (socket) => {
       program.parse(x, { from: 'user' }); 
     } catch (err) {
       if (err.exitCode !== undefined) {
-        // It's a CommanderError
-        io.to(socket.id).emit("server_broadcast_all", err.message);
+        io.to(socket.id).emit("server_broadcast_all", err.message);        // It's a CommanderError
       } else {
-        // It's a general error
-        io.to(socket.id).emit("server_broadcast_all", err.message);
+        io.to(socket.id).emit("server_broadcast_all", err.message);        // It's a general error
       }
     }
 

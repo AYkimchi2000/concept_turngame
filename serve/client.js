@@ -35,8 +35,8 @@ let local_command_tree = {
     }
 };
     
-socket.on('init_command_tree', (command_tree) => {
-    client_command_tree = command_tree
+socket.on('init_command_tree', (modified_command_tree) => {
+    client_command_tree = modified_command_tree
 });
 
 // #endregion
@@ -276,7 +276,7 @@ function getSuggestions() { //this gets called everytime there's a value change 
         }
     }
 
-    if (typeof node === "function") {
+    if (node === "function") {
         console.log("node is function!")
         return {
             "append": "No more subcommand!"
