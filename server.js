@@ -41,31 +41,49 @@ function deepCloneAndModify(source) {
 function buildCommands(name, tree, descriptions = {}) {
   const cmd = new Command(name);
   cmd.exitOverride();
+
   if (descriptions[name]) {
     cmd.description(descriptions[name]);
+  } else {
+    console.log(`error: no help message tree found for command "${name}"`);
   }
-  else { console.log(`error no help message tree found`) }
-  //
-  //
+
   for (const key in tree) {
     const val = tree[key];
+
     if (typeof val === 'function') {
+      // Direct command with no arguments
       cmd.command(key)
         .description(descriptions[key] || '')
         .action(val)
         .exitOverride();
     } else {
       const subKeys = Object.keys(val);
-      const isArgCommand = subKeys.length === 1 && (subKeys[0].startsWith('{') || subKeys[0].startsWith('['));
+      // Check if it's a command with arguments
+      // This now needs to check if the key itself matches argument patterns
+      // like '{name}' or '{name} {age}'
+      const isArgCommand = subKeys.length === 1 && (
+        subKeys[0].includes('{') || subKeys[0].includes('[')
+      );
+
       if (isArgCommand) {
-        const [arg] = subKeys;
-        const fn = val[arg];
-        const subCmd = new Command(key);
-        subCmd.exitOverride();
-        if (descriptions[key]) subCmd.description(descriptions[key]);
-        subCmd.argument(arg).action(fn);
-        cmd.addCommand(subCmd);
+        const argPattern = subKeys[0]; // e.g., '{name}', '{firstName} {lastName}'
+        const fn = val[argPattern];
+
+        // Create the command with the key (e.g., 'rename') and the argument pattern
+        const commandDefinition = `${key} ${argPattern}`;
+
+        cmd.command(commandDefinition)
+          .description(descriptions[key] || '')
+          .action((...args) => {
+            // commander.js passes arguments to the action function
+            // in the order they are defined in the command string.
+            // You can destructure them or access them via the 'args' array.
+            fn(...args);
+          })
+          .exitOverride();
       } else {
+        // Nested commands (sub-commands)
         const subCmd = buildCommands(key, val, descriptions);
         cmd.addCommand(subCmd);
       }
@@ -93,7 +111,10 @@ io.on('connection', (socket) => {
   let command_tree = {
     test: {
       rename: {
-        '{name}': (name) => io.to(socket.id).emit("server_broadcast_all", `hi there, ${name}`)
+        '{name} {newName} {anotherarg}': (name, newName, anotherarg) => {
+          io.to(socket.id).emit("server_broadcast_all", `hi there, renaming ${name} to ${newName}, additional arg also available ${anotherarg}`)
+          console.log("multiline execution worked!")
+        }
       },
       combat_init: {
         alone: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight alone..."),
@@ -114,6 +135,9 @@ io.on('connection', (socket) => {
         invite: () => io.to(socket.id).emit("server_broadcast_all", "you chose to invite to a party"),
         view_member: () => io.to(socket.id).emit("server_broadcast_all", "you are viewing party members"),
       },
+      attack: {
+        '{target}': (name, newName, anotherarg) => io.to(socket.id).emit("server_broadcast_all", `hi there, renaming ${name} to ${newName}, additional arg also available ${anotherarg}`)
+      }
     }
   };
   let modified_command_tree = deepCloneAndModify(command_tree)
