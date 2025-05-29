@@ -179,7 +179,7 @@ io.on('connection', (socket) => {
     program.commands.find(cmd => cmd.name() === 'test').helpInformation = () => {
       return 'this is help message for test';
     };
-    x = msg.trim().split(" ")
+    let x = msg.trim().split(" ")
     try {
       program.parse(x, { from: 'user' }); 
     } catch (err) {

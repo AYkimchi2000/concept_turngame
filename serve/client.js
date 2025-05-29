@@ -8,33 +8,7 @@ let no_result_visibility = true;
 let autocomplete_visibility = false;
 let tab_panel_visible = false;
 let client_command_tree = {}
-// let local_command_tree = {
-//     test: {
-//         rename: {
-//             '{name}': (name) => io.to(socket.id).emit("server_broadcast_all", `hi there, ${name}`)
-//         },
-//         combat_init: {
-//             alone: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight alone..."),
-//             party: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight together..."),
-//         },
-//         char_select: {
-//             clarissa: () => io.to(socket.id).emit("server_broadcast_all", "you selected clarissa as your character"),
-//             chloe: () => io.to(socket.id).emit("server_broadcast_all", "you selected chloe as your character"),
-//             mia: () => io.to(socket.id).emit("server_broadcast_all", "you selected mia as your character"),
 
-//         },
-//         enemy_select: {
-//             goblin: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight a goblin"),
-//             skeleton: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight a skeleton"),
-//             wolves: () => io.to(socket.id).emit("server_broadcast_all", "you chose to fight wolves"), 
-//         },
-//         party: {
-//             invite: () => io.to(socket.id).emit("server_broadcast_all", "you chose to invite to a party"), 
-//             view_member: () => io.to(socket.id).emit("server_broadcast_all", "you are viewing party members"), 
-//         },
-//     }
-// };
-    
 socket.on('init_command_tree', (modified_command_tree) => {
     client_command_tree = modified_command_tree
 });
@@ -236,10 +210,17 @@ const input = document.getElementById("id_command_input_box");
 const suggestionsBox = document.getElementById("suggestions");
 let currentSuggestions = [];
 function getSuggestions() { //this gets called everytime there's a value change in textbox
+    function countArgumentsInString(str) {
+        const regex = /{([^}]+)}/g;
+        const matches = str.match(regex);
+        return matches ? matches.length : 0;
+    }
     const input_command_as_list = document.getElementById("id_command_input_box").value.trim().split(" ");
     let node = client_command_tree
     let endsWithSpace = document.getElementById("id_command_input_box").value.endsWith(" ");
     let current_segment_index = endsWithSpace ? input_command_as_list.length : input_command_as_list.length - 1;
+    let traverse_counter;
+    let arg_counter;
     //current_segment_index, "test" = 0, "test " = 1, "test rename" = 1, "test rename " = 2
 
 
@@ -259,43 +240,59 @@ function getSuggestions() { //this gets called everytime there's a value change 
         }
     }
     else if (current_segment_index > 0) { //if it is not the first segment
-        for (let traverse_counter = 0; traverse_counter < current_segment_index; traverse_counter++) {
+        for (traverse_counter = 0; traverse_counter < current_segment_index; traverse_counter++) {
             if (input_command_as_list[traverse_counter] in node) {
                 node = node[input_command_as_list[traverse_counter]] //traverse using last segment   
+                arg_counter = traverse_counter
             }
-            //traverse to next layer anyways if current node is 
-            else if (String(Object.keys(node)).startsWith("{") && String(Object.keys(node)).endsWith("}")) {
-                node = node[Object.keys(node)]
+            else if (String(Object.keys(node)).startsWith("{") && String(Object.keys(node)).endsWith("}")) { 
+                console.log("currently in arg!")
             }
             else {
+                console.log("failed traversal!")
                 return {
                     "append": "No matching command!"
                 }
-                console.log("input_command_as_list[traverse_counter] not found in node")
             }
         }
     }
-
-    if (node === "function") {
-        console.log("node is function!")
-        return {
-            "append": "No more subcommand!"
-        }
-    }
-    else if (String(Object.keys(node)).startsWith("{") && String(Object.keys(node)).endsWith("}")) {
-        autoCompleteJS.resultItem.highlight = false;
-        return {
-            "append": Object.keys(node)
-        }
-    }
-    else {
-        autoCompleteJS.resultItem.highlight = true;
-        if (node) {
+    
+        if (node === "function") {
+            console.log("node is function!")
             return {
-                "data.src": Object.keys(node)
+                "append": "No more subcommand!"
             }
         }
-    }
+        else if (String(Object.keys(node)).startsWith("{") && String(Object.keys(node)).endsWith("}")) {
+            suggestion_argcount = countArgumentsInString(String(Object.keys(node))) // number of args in suggestion
+            
+            if (current_segment_index - arg_counter <= suggestion_argcount) {
+                return {
+                    "append": Object.keys(node)
+                }
+            }
+            else {
+                console.log(`this is currentseg${current_segment_index} this is arg_count${arg_counter} this is suggestion_argcount${suggestion_argcount}`)
+                console.log("arg seg is over!")
+                return {
+                    "append": "arguments fulfilled!"
+                }
+            }
+            autoCompleteJS.resultItem.highlight = false;
+            console.log("currently_at_arg!")
+            console.log(`this is currentseg${current_segment_index} this is arg_count${arg_counter} this is suggestion_argcount${suggestion_argcount}`)
+            return {
+                "append": Object.keys(node)
+            }
+        }
+        else {
+            autoCompleteJS.resultItem.highlight = true;
+            if (node) {
+                return {
+                    "data.src": Object.keys(node)
+                }
+            }
+        }
 }
 
 // #endregion
