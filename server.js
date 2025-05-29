@@ -1,13 +1,30 @@
-const express = require('express');
-const { createServer } = require('node:http');
-const { join } = require('node:path');
-const { Server } = require('socket.io');
+
+// Imports
+import express from 'express'; 
+import { createServer } from 'node:http'; 
+import { join } from 'node:path'; 
+import { Server } from 'socket.io'; 
+import { Command } from 'commander'; 
+
+// Instantiations (these remain the same)
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
-const fs = require('fs');
-const { Command } = require('commander');
 const program = new Command();
+
+// If you have your own classes like UserCred and CmdTree in a separate file (e.g., 'myClasses.js')
+// myClasses.js:
+/*
+export class UserCred { ... }
+export class CmdTree { ... }
+*/
+
+// Then in main.js, you would import them like this:
+// import { UserCred, CmdTree } from './myClasses.js'; // Note the .js extension is often required in ESM imports
+
+
+
+
 
 let online_player_count = ""
 let online_party_list = ""
