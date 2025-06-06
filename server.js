@@ -58,27 +58,21 @@ function deepCloneAndModify(source) {
 function buildCommands(name, tree, descriptions = {}) {
   const cmd = new Command(name);
   cmd.exitOverride();
-
-  if (descriptions[name]) {
-    cmd.description(descriptions[name]);
-  } else {
-    console.log(`error: no help message tree found for command "${name}"`);
-  }
-
+  // if (descriptions[name]) { 
+  //   cmd.description(descriptions[name]);
+  // } else {
+  //   console.log(`error: no help message tree found for command "${name}"`);
+  // }
   for (const key in tree) {
-    const val = tree[key];
+    const val = tree[key];  
 
-    if (typeof val === 'function') {
-      // Direct command with no arguments
+    if (typeof val === 'function') { //execute if traversed to functions
       cmd.command(key)
-        .description(descriptions[key] || '')
+        // .description(descriptions[key] || '') 
         .action(val)
         .exitOverride();
-    } else {
+    } else { //keep traversing
       const subKeys = Object.keys(val);
-      // Check if it's a command with arguments
-      // This now needs to check if the key itself matches argument patterns
-      // like '{name}' or '{name} {age}'
       const isArgCommand = subKeys.length === 1 && (
         subKeys[0].includes('{') || subKeys[0].includes('[')
       );
@@ -93,9 +87,6 @@ function buildCommands(name, tree, descriptions = {}) {
         cmd.command(commandDefinition)
           .description(descriptions[key] || '')
           .action((...args) => {
-            // commander.js passes arguments to the action function
-            // in the order they are defined in the command string.
-            // You can destructure them or access them via the 'args' array.
             fn(...args);
           })
           .exitOverride();
@@ -118,15 +109,13 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log(`user ${socket.id} disconnected`);
   });
-  
-
-
-
-
-
+  let swapped_command_tree = {
+    test: () => io.to(socket.id).emit("server_broadcast_all", "swapped command tree works..."),
+  }
 
   let command_tree = {
     test: {
+      swap: () => io.to(socket.id).emit("swap_command_tree", deepCloneAndModify(swapped_command_tree)),
       rename: {
         '{name} {newName} {anotherarg}': (name, newName, anotherarg) => {
           io.to(socket.id).emit("server_broadcast_all", `hi there, renaming ${name} to ${newName}, additional arg also available ${anotherarg}`)

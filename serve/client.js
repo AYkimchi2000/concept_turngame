@@ -12,7 +12,10 @@ let client_command_tree = {}
 socket.on('init_command_tree', (modified_command_tree) => {
     client_command_tree = modified_command_tree
 });
-
+socket.on('swap_command_tree', (swapped_command_tree) => {
+    console.log("command tree swapped!")
+    client_command_tree = swapped_command_tree
+});
 // #endregion
 
 // #region global mouse click events 
@@ -68,35 +71,26 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
             response_row_content.classList.add('response_row_content');
             response_row_container.appendChild(response_row_prefix);
             response_row_container.appendChild(response_row_content);
-            //check for local command response
-            response_row_prefix.textContent = 'LocalClient: ';
-            switch (document.getElementById("id_command_input_box").value) {
-                case 'help':
-                    response_row_content.textContent = 'This is where you can get help!';
-                case 'who':
-                    response_row_content.textContent = 'I am arthur!';
-                case 'connect':
-                default: //remote command response if 
-                    document.getElementById('id_text_row_container').style.display = 'none';
-                    document.getElementById('id_command_input_box').disabled = true;
-                    let count = 0;
-                    response_row_prefix.textContent = 'Server: ';
-                    const response_dot_loading = setInterval(() => {
-                        count = (count + 1) % 4;
-                        response_row_content.textContent = 'fetching server response' + '.'.repeat(count);
-                    }, 500);
-                    socket.emit('client_command_input', document.getElementById("id_command_input_box").value);
-                    socket.once('server_broadcast_all', (broadcast_content) => {
-                        clearInterval(response_dot_loading);
-                        response_row_content.textContent = broadcast_content;
-                        document.getElementById('id_text_row_container').style.display = '';
-                        document.getElementById('id_command_input_box').disabled = false;
-                        document.getElementById('id_command_input_box').focus();
-                    });
+            // response_row_prefix.textContent = 'LocalClient: ';
 
-
-            }
             
+            document.getElementById('id_text_row_container').style.display = 'none';
+            document.getElementById('id_command_input_box').disabled = true;
+            let count = 0;
+            response_row_prefix.textContent = 'Server: ';
+            const response_dot_loading = setInterval(() => {
+                count = (count + 1) % 4;
+                response_row_content.textContent = 'fetching server response' + '.'.repeat(count);
+            }, 500);
+            socket.emit('client_command_input', document.getElementById("id_command_input_box").value);
+            socket.once('server_broadcast_all', (broadcast_content) => {
+                clearInterval(response_dot_loading);
+                response_row_content.textContent = broadcast_content;
+                document.getElementById('id_text_row_container').style.display = '';
+                document.getElementById('id_command_input_box').disabled = false;
+                document.getElementById('id_command_input_box').focus();
+            });
+
             //insert element to page
             document.getElementById("id_text_interface_container").insertBefore(clone_of_previous_textrow, document.getElementById("id_text_row_container")); // insert previous text row element
             document.getElementById("id_text_interface_container").insertBefore(response_row_container, document.getElementById("id_text_row_container")); // insert server response row element
@@ -106,6 +100,7 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
         }
     }
     if (event.key === "\\") {
+        document.getElementById('id_command_input_box').focus();
         event.preventDefault();
         autocomplete_visibility = !autocomplete_visibility;
         const inputEvent = new Event("input", { bubbles: true });
@@ -144,6 +139,7 @@ document.getElementById("id_command_input_box").addEventListener("input", (event
     console.log(`object.keys(getsuggestion) is = ${Object.keys(getSuggestions())}`)
     console.log(`object.values(getsuggestion) is = ${Object.values(getSuggestions())}`)
     if (String(Object.keys(getSuggestions())) === "append") {
+        autoCompleteJS.resultItem.highlight = false;
         console.log("trigger append!")
         autoCompleteJS.data.src = [""]
     }
@@ -272,17 +268,9 @@ function getSuggestions() { //this gets called everytime there's a value change 
                 }
             }
             else {
-                console.log(`this is currentseg${current_segment_index} this is arg_count${arg_counter} this is suggestion_argcount${suggestion_argcount}`)
-                console.log("arg seg is over!")
                 return {
                     "append": "arguments fulfilled!"
                 }
-            }
-            autoCompleteJS.resultItem.highlight = false;
-            console.log("currently_at_arg!")
-            console.log(`this is currentseg${current_segment_index} this is arg_count${arg_counter} this is suggestion_argcount${suggestion_argcount}`)
-            return {
-                "append": Object.keys(node)
             }
         }
         else {
