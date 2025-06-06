@@ -73,7 +73,7 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
             response_row_container.appendChild(response_row_content);
             // response_row_prefix.textContent = 'LocalClient: ';
 
-            
+
             document.getElementById('id_text_row_container').style.display = 'none';
             document.getElementById('id_command_input_box').disabled = true;
             let count = 0;
@@ -82,10 +82,19 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
                 count = (count + 1) % 4;
                 response_row_content.textContent = 'fetching server response' + '.'.repeat(count);
             }, 500);
+
+
             socket.emit('client_command_input', document.getElementById("id_command_input_box").value);
-            socket.once('server_broadcast_all', (broadcast_content) => {
+            socket.once("server_broadcast_all", (broadcast_content) => {
                 clearInterval(response_dot_loading);
-                response_row_content.textContent = broadcast_content;
+                response_row_content.textContent = `${broadcast_content};`
+                document.getElementById('id_text_row_container').style.display = '';
+                document.getElementById('id_command_input_box').disabled = false;
+                document.getElementById('id_command_input_box').focus();
+            });
+            socket.once("swap_command_tree", (broadcast_content) => {
+                clearInterval(response_dot_loading);
+                response_row_content.textContent = `${Object.keys(broadcast_content)};`
                 document.getElementById('id_text_row_container').style.display = '';
                 document.getElementById('id_command_input_box').disabled = false;
                 document.getElementById('id_command_input_box').focus();

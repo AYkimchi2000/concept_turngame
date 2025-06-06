@@ -71,14 +71,15 @@ function buildCommands(name, tree, descriptions = {}) {
         // .description(descriptions[key] || '') 
         .action(val)
         .exitOverride();
-    } else { //keep traversing
+    } 
+    else { //keep traversing
       const subKeys = Object.keys(val);
       const isArgCommand = subKeys.length === 1 && (
         subKeys[0].includes('{') || subKeys[0].includes('[')
       );
 
       if (isArgCommand) {
-        const argPattern = subKeys[0]; // e.g., '{name}', '{firstName} {lastName}'
+        const argPattern = subKeys[0]; 
         const fn = val[argPattern];
 
         // Create the command with the key (e.g., 'rename') and the argument pattern
@@ -110,12 +111,15 @@ io.on('connection', (socket) => {
     console.log(`user ${socket.id} disconnected`);
   });
   let swapped_command_tree = {
-    test: () => io.to(socket.id).emit("server_broadcast_all", "swapped command tree works..."),
-  }
+    successfully_swapped: () => io.to(socket.id).emit("server_broadcast_all", "swapped command tree works..."),
+  };
 
   let command_tree = {
     test: {
-      swap: () => io.to(socket.id).emit("swap_command_tree", deepCloneAndModify(swapped_command_tree)),
+      swap: () => {
+        io.to(socket.id).emit("swap_command_tree", deepCloneAndModify(swapped_command_tree))
+        console.log("command tree function triggered!")
+      },
       rename: {
         '{name} {newName} {anotherarg}': (name, newName, anotherarg) => {
           io.to(socket.id).emit("server_broadcast_all", `hi there, renaming ${name} to ${newName}, additional arg also available ${anotherarg}`)
@@ -146,6 +150,7 @@ io.on('connection', (socket) => {
       }
     }
   };
+
   let modified_command_tree = deepCloneAndModify(command_tree)
   io.to(socket.id).emit("init_command_tree", modified_command_tree)
   
