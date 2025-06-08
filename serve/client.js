@@ -9,12 +9,8 @@ let autocomplete_visibility = false;
 let tab_panel_visible = false;
 let client_command_tree = {}
 
-socket.on('init_command_tree', (modified_command_tree) => {
-    client_command_tree = modified_command_tree
-});
-socket.on('swap_command_tree', (swapped_command_tree) => {
-    console.log("command tree swapped!")
-    client_command_tree = swapped_command_tree
+socket.on('init_command_tree', (command_tree) => {
+    client_command_tree = command_tree
 });
 // #endregion
 
@@ -66,13 +62,13 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
             const response_row_container = document.createElement('div');
             const response_row_prefix = document.createElement('div');
             const response_row_content = document.createElement('div');
+
             response_row_container.classList.add('response_row_container');
             response_row_prefix.classList.add('response_prefix_container');
             response_row_content.classList.add('response_row_content');
+
             response_row_container.appendChild(response_row_prefix);
             response_row_container.appendChild(response_row_content);
-            // response_row_prefix.textContent = 'LocalClient: ';
-
 
             document.getElementById('id_text_row_container').style.display = 'none';
             document.getElementById('id_command_input_box').disabled = true;
@@ -83,18 +79,13 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
                 response_row_content.textContent = 'fetching server response' + '.'.repeat(count);
             }, 500);
 
-
+            //send input box value to server
             socket.emit('client_command_input', document.getElementById("id_command_input_box").value);
-            socket.once("server_broadcast_all", (broadcast_content) => {
+
+            //catch server response
+            socket.once("server_response", (msg) => {
                 clearInterval(response_dot_loading);
-                response_row_content.textContent = `${broadcast_content};`
-                document.getElementById('id_text_row_container').style.display = '';
-                document.getElementById('id_command_input_box').disabled = false;
-                document.getElementById('id_command_input_box').focus();
-            });
-            socket.once("swap_command_tree", (broadcast_content) => {
-                clearInterval(response_dot_loading);
-                response_row_content.textContent = `${Object.keys(broadcast_content)};`
+                response_row_content.textContent = `${msg}`
                 document.getElementById('id_text_row_container').style.display = '';
                 document.getElementById('id_command_input_box').disabled = false;
                 document.getElementById('id_command_input_box').focus();
@@ -122,7 +113,7 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
 
 
     // #region up down arrow navigate history
-    if (event.key === "ArrowUp" && historyIndex > 0) {
+    if (event.key === "PageUp" && historyIndex > 0) {
         event.preventDefault();
         historyIndex--;
         document.getElementById("id_command_input_box").value = command_history[historyIndex];
@@ -130,7 +121,7 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
         document.getElementById("id_command_input_box").dispatchEvent(inputEvent);// force re-render by sending a null keypress event
         return;
     }
-    if (event.key === "ArrowDown" && historyIndex < command_history.length - 1) {
+    if (event.key === "PageDown" && historyIndex < command_history.length - 1) {
         event.preventDefault();
         historyIndex++;
         document.getElementById("id_command_input_box").value = command_history[historyIndex];
@@ -172,10 +163,7 @@ document.getElementById("id_command_input_box").addEventListener("input", (event
 // #region autocomplete
 
 const autoCompleteJS = new autoComplete({
-    options: {
-        searchEngine: "strict"
-    },
-    detached: true,
+
     trigger: () => autocomplete_visibility,
     query: (input) => {
         const current_segment = document.getElementById("id_command_input_box").value.split(" ")
@@ -211,6 +199,7 @@ const autoCompleteJS = new autoComplete({
         highlight: true,
     }
 });
+
 const input = document.getElementById("id_command_input_box");
 const suggestionsBox = document.getElementById("suggestions");
 let currentSuggestions = [];
