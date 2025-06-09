@@ -15,9 +15,9 @@ socket.on('init_command_tree', (command_tree) => {
 // #endregion
 
 // #region global mouse click events 
-document.getElementById("id_prompt_panel").addEventListener("click", event => {
-    document.getElementById('id_command_input_box').focus();
-});
+// document.getElementById("id_prompt_panel").addEventListener("click", event => {
+//     document.getElementById('id_command_input_box').focus();
+// });
 // #endregion
 
 // #region document keypress events
@@ -26,11 +26,11 @@ document.addEventListener("keydown", event => {
     const sound = (e.key === 'Enter' || e.key === ' ' || e.key === 'Backspace' || e.key === 'Escape') ? '2.wav' : '1.wav';
     new Audio(sound).play();
 
-    if (event.key === "Tab") {
-        event.preventDefault();
-        tab_panel_visible = !tab_panel_visible;
-        document.getElementById("id_status_panel").style.display = tab_panel_visible ? "block" : "none";
-    }
+    // if (event.key === "Tab") {
+    //     event.preventDefault();
+    //     tab_panel_visible = !tab_panel_visible;
+    //     document.getElementById("id_status_panel").style.display = tab_panel_visible ? "block" : "none";
+    // }
 
 });
 
@@ -39,9 +39,10 @@ document.addEventListener("keydown", event => {
 
 // #region input box keypress events
 document.getElementById("id_command_input_box").addEventListener("keydown", (event) => {
+
     if (event.key === "Enter") {
-        event.preventDefault()
-        autocomplete_visibility = false;
+        autocomplete_visibility = false
+        event.preventDefault();
         const inputEvent = new Event("input", { bubbles: true });
         document.getElementById("id_command_input_box").dispatchEvent(inputEvent);
 
@@ -54,6 +55,15 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
             //clone and replace last input command container
             const clone_of_previous_textrow = document.getElementById('id_text_row_container').cloneNode(true);
             clone_of_previous_textrow.querySelector('div:nth-child(2) > div > ul').remove();
+            //replaces the input element in the clone_of_previous_textrow with a span element
+            const inputBox = clone_of_previous_textrow.querySelector('input');
+            if (inputBox) { 
+                const inputValue = inputBox.value;
+                const new_span_element = document.createElement('span');
+                new_span_element.textContent = inputValue;
+                new_span_element.classList.add('chat_history_text'); 
+                inputBox.replaceWith(new_span_element);
+            }
             clone_of_previous_textrow.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
             clone_of_previous_textrow.removeAttribute('id');
 
@@ -99,6 +109,9 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
 
         }
     }
+    else if (autocomplete_visibility === true) {
+        
+    }
     if (event.key === "\\") {
         document.getElementById('id_command_input_box').focus();
         event.preventDefault();
@@ -136,11 +149,10 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
 
 // #region input box value change events
 document.getElementById("id_command_input_box").addEventListener("input", (event) => {
-    console.log(`object.keys(getsuggestion) is = ${Object.keys(getSuggestions())}`)
-    console.log(`object.values(getsuggestion) is = ${Object.values(getSuggestions())}`)
+    // console.log(`object.keys(getsuggestion) is = ${Object.keys(getSuggestions())}`)
+    // console.log(`object.values(getsuggestion) is = ${Object.values(getSuggestions())}`)
     if (String(Object.keys(getSuggestions())) === "append") {
         autoCompleteJS.resultItem.highlight = false;
-        console.log("trigger append!")
         autoCompleteJS.data.src = [""]
     }
     else if (String(Object.keys(getSuggestions())) === "data.src") {
@@ -148,14 +160,18 @@ document.getElementById("id_command_input_box").addEventListener("input", (event
         autoCompleteJS.data.src = String(Object.values(getSuggestions())).split(',');
     }
     else {
-        console.log("untagged query!")
+        // console.log("untagged query!")
         return
     }
-    console.log(
-        `getSuggestion() = ${getSuggestions()}\n` +
-        `getSuggestion() type is = ${typeof getSuggestions()}\n` +
-        `autoCompleteJS.data.src is = ${autoCompleteJS.data.src}\n`
-    );
+try {
+        // console.log(
+        //     `getSuggestion() = ${getSuggestions()}\n` +
+        //     `getSuggestion() type is = ${typeof getSuggestions()}\n` +
+        //     `autoCompleteJS.data.src is = ${autoCompleteJS.data.src}\n`
+        // );
+} catch (error) {
+    
+}
 });
 
 // #endregion
@@ -163,7 +179,7 @@ document.getElementById("id_command_input_box").addEventListener("input", (event
 // #region autocomplete
 
 const autoCompleteJS = new autoComplete({
-
+    
     trigger: () => autocomplete_visibility,
     query: (input) => {
         const current_segment = document.getElementById("id_command_input_box").value.split(" ")
@@ -185,7 +201,7 @@ const autoCompleteJS = new autoComplete({
             }
             else {
                 if (data.results.length === 0) {
-                    console.log(`${data.results}`)
+                    // console.log(`${data.results}`)
                     const message = document.createElement("div");
                     message.setAttribute("class", "no_result");
                     message.innerHTML = `<span>No matching command!</span>`;
@@ -194,10 +210,24 @@ const autoCompleteJS = new autoComplete({
             }
         },
         noResults: true,
+        tabSelect: true
     },
     resultItem: {
         highlight: true,
-    }
+    },
+    events: {
+        input: {
+            selection: (event) => {
+                const selection = event.detail.selection.value;
+                const input = document.querySelector("#id_command_input_box");
+                const parts = input.value.split(" ");
+                parts[parts.length - 1] = selection;
+                input.value = parts.join(" ");
+            }
+        }
+      }
+    
+    
 });
 
 const input = document.getElementById("id_command_input_box");
@@ -240,10 +270,10 @@ function getSuggestions() { //this gets called everytime there's a value change 
                 arg_counter = traverse_counter
             }
             else if (String(Object.keys(node)).startsWith("{") && String(Object.keys(node)).endsWith("}")) { 
-                console.log("currently in arg!")
+                // console.log("currently in arg!")
             }
             else {
-                console.log("failed traversal!")
+                // console.log("failed traversal!")
                 return {
                     "append": "No matching command!"
                 }
@@ -252,7 +282,7 @@ function getSuggestions() { //this gets called everytime there's a value change 
     }
     
         if (node === "function") {
-            console.log("node is function!")
+            // console.log("node is function!")
             return {
                 "append": "No more subcommand!"
             }
