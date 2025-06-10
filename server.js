@@ -80,7 +80,7 @@ io.on('connection', (socket) => {
     console.log(`user ${socket.id} disconnected`);
   });
 
-  io.to(socket.id).emit("init_command_tree", cmdtree.deepCloneAndModify(cmdtree.test)) //initial command tree
+  io.to(socket.id).emit("init_command_tree", cmdtree.deepCloneAndModify(cmdtree.current)) //initial command tree
 
 
   socket.on('client_command_input', (msg) => {

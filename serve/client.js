@@ -12,6 +12,9 @@ let client_command_tree = {}
 socket.on('init_command_tree', (command_tree) => {
     client_command_tree = command_tree
 });
+socket.on('display_playername', (username) => {
+    document.getElementById('id_prompt_prefix_player_id').innerHTML = `${username}@`
+})
 // #endregion
 
 // #region global mouse click events 
@@ -61,7 +64,6 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
                 const inputValue = inputBox.value;
                 const new_span_element = document.createElement('span');
                 new_span_element.textContent = inputValue;
-                new_span_element.classList.add('chat_history_text'); 
                 inputBox.replaceWith(new_span_element);
             }
             clone_of_previous_textrow.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
@@ -272,6 +274,9 @@ function getSuggestions() { //this gets called everytime there's a value change 
             else if (String(Object.keys(node)).startsWith("{") && String(Object.keys(node)).endsWith("}")) { 
                 // console.log("currently in arg!")
             }
+            // else if (["login", "register"].some(key => key in Object.keys(node))) {
+            //     document.getElementById('id_prompt_prefix_player_id').innerHTML = 'New Content Here';
+            // }
             else {
                 // console.log("failed traversal!")
                 return {
@@ -312,3 +317,6 @@ function getSuggestions() { //this gets called everytime there's a value change 
 }
 
 // #endregion
+
+// if user currently in the login tree, open event listener.
+// else, close event listener.

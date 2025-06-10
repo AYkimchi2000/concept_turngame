@@ -28,6 +28,8 @@ export class CmdTree {
                     if (password === confirm_password) {
                         if (this.userCred.register_user(username, password)) { // Access via this.userCred
                             this.io.to(this.socket.id).emit("server_response", `successfully registered user ${username}`);
+                            this.io.to(this.socket.id).emit("display_playername", username);
+                            
                         } else {
                             this.io.to(this.socket.id).emit("server_response", `Failed to register user ${username}`);
                         }
@@ -36,11 +38,14 @@ export class CmdTree {
                     }
                 }
             }
+            login: {
+                
+            }
         };
         this.test = {
             test: {
                 swap: () => {
-                    this.current = this.swapped_command_tree;
+                    this.current = this.swapped_command_tree; //swappes current ot 
                     io.to(socket.id).emit("server_response", "successfully swapped!")
                     io.to(socket.id).emit("init_command_tree", this.deepCloneAndModify(this.swapped_command_tree))
                 },
@@ -76,7 +81,7 @@ export class CmdTree {
         this.swapped_command_tree = {
             swapped_success: () => io.to(socket.id).emit("server_response", "you chose to fight alone..."),
         }
-        this.current = this.test;
+        this.current = this.login; //set initial tree to the test tree
     }
     deepCloneAndModify(source) {
         const target = {};
