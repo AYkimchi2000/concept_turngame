@@ -1,49 +1,12 @@
 // #region imports init
 const socket = io();
-
-// #region global variables
-const command_history = [];
-let historyIndex = 0;
-let no_result_visibility = true;
-let autocomplete_visibility = false;
-let tab_panel_visible = false;
-let client_command_tree = {}
-
-socket.on('init_command_tree', (command_tree) => {
-    client_command_tree = command_tree
-});
-socket.on('display_playername', (username) => {
-    document.getElementById('id_prompt_prefix_player_id').innerHTML = `${username}@`
-})
-// #endregion
-
-// #region global mouse click events 
-// document.getElementById("id_prompt_panel").addEventListener("click", event => {
-//     document.getElementById('id_command_input_box').focus();
-// });
-// #endregion
-
-// #region document keypress events
-document.addEventListener("keydown", event => {
-    // play keystrike audio
-    const sound = (e.key === 'Enter' || e.key === ' ' || e.key === 'Backspace' || e.key === 'Escape') ? '2.wav' : '1.wav';
-    new Audio(sound).play();
-
-    // if (event.key === "Tab") {
-    //     event.preventDefault();
-    //     tab_panel_visible = !tab_panel_visible;
-    //     document.getElementById("id_status_panel").style.display = tab_panel_visible ? "block" : "none";
-    // }
-
-});
-
-
-// #endregion
-
-// #region input box keypress events
-document.getElementById("id_command_input_box").addEventListener("keydown", (event) => {
-
-    if (event.key === "Enter") {
+class Comms {
+    constructor() {
+        // this.io = io;
+        // this.socket = socket;
+        // this.event = event
+    }
+    display_message_client(socket, event) {
         autocomplete_visibility = false
         event.preventDefault();
         const inputEvent = new Event("input", { bubbles: true });
@@ -60,7 +23,7 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
             clone_of_previous_textrow.querySelector('div:nth-child(2) > div > ul').remove();
             //replaces the input element in the clone_of_previous_textrow with a span element
             const inputBox = clone_of_previous_textrow.querySelector('input');
-            if (inputBox) { 
+            if (inputBox) {
                 const inputValue = inputBox.value;
                 const new_span_element = document.createElement('span');
                 new_span_element.textContent = inputValue;
@@ -111,9 +74,61 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
 
         }
     }
-    else if (autocomplete_visibility === true) {
-        
+}
+let comm = new Comms();
+// #region global variables
+const command_history = [];
+let historyIndex = 0;
+let no_result_visibility = true;
+let autocomplete_visibility = false;
+let tab_panel_visible = false;
+let client_command_tree = {}
+
+socket.on('init_command_tree', (command_tree) => {
+    client_command_tree = command_tree
+});
+socket.on('change_playername', (username) => {
+    document.getElementById('id_prompt_prefix_player_id').innerHTML = `${username}@`
+});
+socket.on('join_room', (room_id) => {
+    if ([...socket.rooms].some(r => r !== socket.id)) { // if client is in any room other than the original
+        //
     }
+
+});
+// #endregion
+
+// #region global mouse click events 
+// document.getElementById("id_prompt_panel").addEventListener("click", event => {
+//     document.getElementById('id_command_input_box').focus();
+// });
+// #endregion
+
+// #region document keypress events
+document.addEventListener("keydown",  event=> {
+    // play keystrike audio
+    const sound = (event.key === 'Enter' || event.key === ' ' || event.key === 'Backspace' || event.key === 'Escape') ? '2.wav' : '1.wav';
+    new Audio(sound).play();
+
+    // if (event.key === "Tab") {
+    //     event.preventDefault();
+    //     tab_panel_visible = !tab_panel_visible;
+    //     document.getElementById("id_status_panel").style.display = tab_panel_visible ? "block" : "none";
+    // }
+
+});
+
+
+// #endregion
+
+// #region input box keypress events
+document.getElementById("id_command_input_box").addEventListener("keydown", (event) => {
+
+    if (event.key === "Enter") {
+        comm.display_message_client(socket, event)
+    }
+
+    
     if (event.key === "\\") {
         document.getElementById('id_command_input_box').focus();
         event.preventDefault();

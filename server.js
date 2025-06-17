@@ -5,7 +5,7 @@ import { createServer } from 'node:http';
 import { join } from 'node:path'; 
 import { Server } from 'socket.io'; 
 import { Command } from 'commander'; 
-import { CmdTree } from './commandtrees.js'
+import { CmdTree } from './game_modules/commandtrees.js'
 
 // Instantiations (these remain the same)
 const app = express();

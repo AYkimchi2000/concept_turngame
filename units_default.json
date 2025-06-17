@@ -1,5 +1,6 @@
 {
   "elliot": {
+    "type": "playable_character",
     "character_name" : "Elliot",
     "character_ability_score": {
       "str": 8,
@@ -8,7 +9,7 @@
       "int": 3,
       "pei": 2,
       "spd": 4,
-      "luk": 1
+      "arc": 1
     },
     "character_class": "warrior",
     "character_race": "human",
@@ -24,6 +25,7 @@
     ]
   },
   "clarissa": {
+    "type": "playable_character",
     "character_name": "clarissa",
     "character_ability_score": {
       "str": 1,
@@ -32,7 +34,7 @@
       "int": 9,
       "pei": 6,
       "spd": 3,
-      "luk": 2
+      "arc": 2
     },
     "character_class": "mage",
     "character_race": "elf",
@@ -48,6 +50,7 @@
     ]
   },
   "mia": {
+    "type": "playable_character",
     "character_name": "Mia",
     "character_ability_score": {
       "str": 2,
@@ -56,7 +59,7 @@
       "int": 5,
       "pei": 3,
       "spd": 7,
-      "luk": 4
+      "arc": 4
     },
     "character_class": "rogue",
     "character_race": "halfling",
@@ -70,5 +73,15 @@
       "sneak attack",
       "evasion"
     ]
+  },
+  "Lamia": {
+
+  },
+  "Animated_Armor": {
+
+  },
+  "Dryad": {
+
   }
+  
 }
