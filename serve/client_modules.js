@@ -3,6 +3,12 @@ export class Client_ui {
         this.autocomplete_visibility = false;
         this.command_history = [];
         this.history_index = 0;
+        this.response_dot_loading = setInterval(() => {
+            count = (count + 1) % 4;
+            response_row_content.textContent = 'fetching server response' + '.'.repeat(count);
+        }, 500);
+
+
         // this.io = io;
         this.socket = socket;
         // this.event = event
@@ -74,7 +80,8 @@ export class Client_ui {
         }
         else if (mode === "on") {
             this.socket.on(`${event_name}`, (msg) => {
-                clearInterval(response_dot_loading);
+
+                clearInterval(this.response_dot_loading);
                 response_row_content.textContent = `${msg}`
                 //re_alive command_input_box
                 document.getElementById('id_text_row_container').style.display = '';
