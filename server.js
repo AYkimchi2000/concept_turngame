@@ -2,10 +2,10 @@
 // Imports
 import express from 'express'; 
 import { createServer } from 'node:http'; 
-import { join } from 'node:path'; 
+// import { join } from 'node:path'; 
 import { Server } from 'socket.io'; 
 import { Command } from 'commander'; 
-import { CmdTree } from './game_modules/commandtrees.js'
+import { CmdTree } from './server_modules.js'
 
 // Instantiations (these remain the same)
 const app = express();
@@ -76,6 +76,12 @@ app.use(express.static('serve'));
 io.on('connection', (socket) => {
   console.log(`user ${socket.id} connected`);
   const cmdtree = new CmdTree(io, socket);
+
+
+  socket.on('joinRoom', (room_id) => {
+    socket.join(room_id);
+  });
+
   socket.on('disconnect', () => {
     console.log(`user ${socket.id} disconnected`);
   });
@@ -97,9 +103,9 @@ io.on('connection', (socket) => {
       program.parse(x, { from: 'user' }); 
     } catch (err) {
       if (err.exitCode !== undefined) {
-        io.to(socket.id).emit("server_response", err.message);        // It's a CommanderError
+        io.to(socket.id).emit("server_text_response", err.message);        // It's a CommanderError
       } else {
-        io.to(socket.id).emit("server_response", err.message);        // It's a general error
+        io.to(socket.id).emit("server_text_response", err.message);        // It's a general error
       }
     }
 

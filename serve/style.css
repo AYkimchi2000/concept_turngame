@@ -29,7 +29,7 @@ body {
 }
 
 /* #region Buttons */
-.padding_border {
+.generic_panel {
     height: 100%;
     width: 100%;
     display: block;

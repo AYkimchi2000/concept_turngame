@@ -10,7 +10,7 @@
 </head>
 
 <body>
-    <div id="id_prompt_panel" class="padding_border">
+    <div id="id_prompt_panel" class="generic_panel">
         <div class="text_interface_container" id="id_text_interface_container">
             <div class="text_row_container" id="id_text_row_container">
                 <div class="prompt_prefix_container" id="id_prompt_prefix_container"> 
@@ -28,13 +28,12 @@
             
         </div>
     </div>
-    <div class="padding_border" id="id_status_panel" style="display: none">
+    <div class="generic_panel" id="id_status_panel" style="display: none">
     </div>
-    <script src="./autoComplete.js">
-        
-    </script>
     <script src="/socket.io/socket.io.js"></script>
-    <script src="./client.js"></script>
+    <script type="module" src="./autoComplete.js"></script>
+    <script type="module" src="./client_modules.js"></script>
+    <script type="module" src="./client.js"></script>
 </body>
 
 </html>

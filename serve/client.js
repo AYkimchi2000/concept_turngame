@@ -1,86 +1,10 @@
 // #region imports init
+import { Client_ui } from "./client_modules.js";
 const socket = io();
-class Comms {
-    constructor() {
-        // this.io = io;
-        // this.socket = socket;
-        // this.event = event
-    }
-    display_message_client(socket, event) {
-        autocomplete_visibility = false
-        event.preventDefault();
-        const inputEvent = new Event("input", { bubbles: true });
-        document.getElementById("id_command_input_box").dispatchEvent(inputEvent);
-
-        if (document.getElementById("id_command_input_box").value.trim()) {
-
-            //save to command_history
-            command_history.push(document.getElementById("id_command_input_box").value);
-            historyIndex = command_history.length;
-
-            //clone and replace last input command container
-            const clone_of_previous_textrow = document.getElementById('id_text_row_container').cloneNode(true);
-            clone_of_previous_textrow.querySelector('div:nth-child(2) > div > ul').remove();
-            //replaces the input element in the clone_of_previous_textrow with a span element
-            const inputBox = clone_of_previous_textrow.querySelector('input');
-            if (inputBox) {
-                const inputValue = inputBox.value;
-                const new_span_element = document.createElement('span');
-                new_span_element.textContent = inputValue;
-                inputBox.replaceWith(new_span_element);
-            }
-            clone_of_previous_textrow.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
-            clone_of_previous_textrow.removeAttribute('id');
+const client_ui = new Client_ui(socket);
 
 
-            //construct response row element 
-            const response_row_container = document.createElement('div');
-            const response_row_prefix = document.createElement('div');
-            const response_row_content = document.createElement('div');
-
-            response_row_container.classList.add('response_row_container');
-            response_row_prefix.classList.add('response_prefix_container');
-            response_row_content.classList.add('response_row_content');
-
-            response_row_container.appendChild(response_row_prefix);
-            response_row_container.appendChild(response_row_content);
-
-            document.getElementById('id_text_row_container').style.display = 'none';
-            document.getElementById('id_command_input_box').disabled = true;
-            let count = 0;
-            response_row_prefix.textContent = 'Server: ';
-            const response_dot_loading = setInterval(() => {
-                count = (count + 1) % 4;
-                response_row_content.textContent = 'fetching server response' + '.'.repeat(count);
-            }, 500);
-
-            //send input box value to server
-            socket.emit('client_command_input', document.getElementById("id_command_input_box").value);
-
-            //catch server response
-            socket.once("server_response", (msg) => {
-                clearInterval(response_dot_loading);
-                response_row_content.textContent = `${msg}`
-                document.getElementById('id_text_row_container').style.display = '';
-                document.getElementById('id_command_input_box').disabled = false;
-                document.getElementById('id_command_input_box').focus();
-            });
-
-            //insert element to page
-            document.getElementById("id_text_interface_container").insertBefore(clone_of_previous_textrow, document.getElementById("id_text_row_container")); // insert previous text row element
-            document.getElementById("id_text_interface_container").insertBefore(response_row_container, document.getElementById("id_text_row_container")); // insert server response row element
-            document.getElementById('id_command_input_box').value = ""; // clear text input box
-
-
-        }
-    }
-}
-let comm = new Comms();
 // #region global variables
-const command_history = [];
-let historyIndex = 0;
-let no_result_visibility = true;
-let autocomplete_visibility = false;
 let tab_panel_visible = false;
 let client_command_tree = {}
 
@@ -92,69 +16,68 @@ socket.on('change_playername', (username) => {
 });
 socket.on('join_room', (room_id) => {
     if ([...socket.rooms].some(r => r !== socket.id)) { // if client is in any room other than the original
-        //
+        socket.emit('joinRoom', room_id);
     }
 
 });
 // #endregion
 
 // #region global mouse click events 
-// document.getElementById("id_prompt_panel").addEventListener("click", event => {
-//     document.getElementById('id_command_input_box').focus();
-// });
+document.getElementById("id_prompt_panel").addEventListener("click", event => {
+    document.getElementById('id_command_input_box').focus();
+});
 // #endregion
 
-// #region document keypress events
-document.addEventListener("keydown",  event=> {
-    // play keystrike audio
+// #region global document keypress events
+document.addEventListener("keydown",  (event)=> { 
+    //play keystroke sounds
     const sound = (event.key === 'Enter' || event.key === ' ' || event.key === 'Backspace' || event.key === 'Escape') ? '2.wav' : '1.wav';
     new Audio(sound).play();
 
-    // if (event.key === "Tab") {
-    //     event.preventDefault();
-    //     tab_panel_visible = !tab_panel_visible;
-    //     document.getElementById("id_status_panel").style.display = tab_panel_visible ? "block" : "none";
-    // }
+    //toggle bottom panel
+    if (event.key === "`") {
+        
+    }
+
+
 
 });
-
-
 // #endregion
 
 // #region input box keypress events
 document.getElementById("id_command_input_box").addEventListener("keydown", (event) => {
 
     if (event.key === "Enter") {
-        comm.display_message_client(socket, event)
-    }
+        event.preventDefault();
+        if (document.getElementById("id_command_input_box").value.trim()) {
+            socket.emit('client_command_input', document.getElementById("id_command_input_box").value);
+            client_ui.catch_server_response("server_text_response", "once")
+            client_ui.command_history.push(document.getElementById("id_command_input_box").value);
+            client_ui.history_index = client_ui.command_history.length;
+        }
+        client_ui.display_message_client(socket, event)
 
-    
+
+    }
     if (event.key === "\\") {
-        document.getElementById('id_command_input_box').focus();
         event.preventDefault();
-        autocomplete_visibility = !autocomplete_visibility;
-        const inputEvent = new Event("input", { bubbles: true });
-        document.getElementById("id_command_input_box").dispatchEvent(inputEvent);// force re-render by sending a null keypress event
-    }
-    if (event.key === "`") {
-        event.preventDefault();
-
+        client_ui.toggle_autocomplete_visibility(event)
     }
 
 
     // #region up down arrow navigate history
-    if (event.key === "PageUp" && historyIndex > 0) {
+    if (event.key === "PageUp" && client_ui.history_index > 0) {
         event.preventDefault();
-        historyIndex--;
-        document.getElementById("id_command_input_box").value = command_history[historyIndex];
+        client_ui.history_index--;
+        document.getElementById("id_command_input_box").value = client_ui.command_history[client_ui.history_index];
         const inputEvent = new Event("input", { bubbles: true });
         document.getElementById("id_command_input_box").dispatchEvent(inputEvent);// force re-render by sending a null keypress event
         return;
     }
-    if (event.key === "PageDown" && historyIndex < command_history.length - 1) {
+    if (event.key === "PageDown" && client_ui.history_index < client_ui.command_history.length - 1) {
         event.preventDefault();
-        historyIndex++;
-        document.getElementById("id_command_input_box").value = command_history[historyIndex];
+        client_ui.history_index++;
+        document.getElementById("id_command_input_box").value = client_ui.command_history[client_ui.history_index];
         const inputEvent = new Event("input", { bubbles: true });
         document.getElementById("id_command_input_box").dispatchEvent(inputEvent);// force re-render by sending a null keypress event
         return;
@@ -197,7 +120,7 @@ try {
 
 const autoCompleteJS = new autoComplete({
     
-    trigger: () => autocomplete_visibility,
+    trigger: () => client_ui.autocomplete_visibility,
     query: (input) => {
         const current_segment = document.getElementById("id_command_input_box").value.split(" ")
         return current_segment[current_segment.length - 1];
@@ -243,8 +166,6 @@ const autoCompleteJS = new autoComplete({
             }
         }
       }
-    
-    
 });
 
 const input = document.getElementById("id_command_input_box");
