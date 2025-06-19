@@ -20,6 +20,7 @@ socket.on('join_room', (room_id) => {
     }
 
 });
+// socket.on('server_broadcast', )
 // #endregion
 
 // #region global mouse click events 
@@ -50,12 +51,11 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
     if (event.key === "Enter") {
         event.preventDefault();
         if (document.getElementById("id_command_input_box").value.trim()) {
-            socket.emit('client_command_input', document.getElementById("id_command_input_box").value);
-            client_ui.catch_server_response("server_text_response", "once")
+            client_ui.send_command_to_server("client_command_input")
             client_ui.command_history.push(document.getElementById("id_command_input_box").value);
             client_ui.history_index = client_ui.command_history.length;
+            client_ui.display_response_client("Server")
         }
-        client_ui.display_message_client(socket, event)
 
 
     }

@@ -3,23 +3,16 @@ export class Client_ui {
         this.autocomplete_visibility = false;
         this.command_history = [];
         this.history_index = 0;
-        this.response_dot_loading = setInterval(() => {
-            count = (count + 1) % 4;
-            response_row_content.textContent = 'fetching server response' + '.'.repeat(count);
-        }, 500);
-
-
         // this.io = io;
         this.socket = socket;
         // this.event = event
     }
-    display_message_client() {
+    display_response_client(speaker) {
         this.autocomplete_visibility = false;
         const inputEvent = new Event("input", { bubbles: true });
         document.getElementById("id_command_input_box").dispatchEvent(inputEvent);
 
         if (document.getElementById("id_command_input_box").value.trim()) {
-
             //clone and replace last input command container
             const clone_of_previous_textrow = document.getElementById('id_text_row_container').cloneNode(true);
             clone_of_previous_textrow.querySelector('div:nth-child(2) > div > ul').remove();
@@ -48,14 +41,20 @@ export class Client_ui {
 
             document.getElementById('id_text_row_container').style.display = 'none';
             document.getElementById('id_command_input_box').disabled = true;
-            //loading message
+            //loading message until message received from server
             let count = 0;
-            response_row_prefix.textContent = 'Server: ';
+            response_row_prefix.textContent = `${speaker}: `;
             const response_dot_loading = setInterval(() => {
                 count = (count + 1) % 4;
                 response_row_content.textContent = 'fetching server response' + '.'.repeat(count);
             }, 500);
-
+            clearInterval(response_dot_loading);
+            this.socket.once(`server_text_response`, (msg) => {
+                response_row_content.textContent = `${msg}`
+            });
+            document.getElementById('id_text_row_container').style.display = '';
+            document.getElementById('id_command_input_box').disabled = false;
+            document.getElementById('id_command_input_box').focus();
             //insert element to page
             document.getElementById("id_text_interface_container").insertBefore(clone_of_previous_textrow, document.getElementById("id_text_row_container")); // insert previous text row element
             document.getElementById("id_text_interface_container").insertBefore(response_row_container, document.getElementById("id_text_row_container")); // insert server response row element
@@ -64,35 +63,18 @@ export class Client_ui {
 
         }
     }
-    send_to_server(event_name) {
+    send_command_to_server(event_name) {    
         this.socket.emit(`${event_name}`, document.getElementById("id_command_input_box").value);
     }
-    catch_server_response(event_name, mode) {
-        if (mode === "once") {
-            this.socket.once(`${event_name}`, (msg) => {
-                clearInterval(response_dot_loading);
-                response_row_content.textContent = `${msg}`
-                //re_alive command_input_box
-                document.getElementById('id_text_row_container').style.display = '';
-                document.getElementById('id_command_input_box').disabled = false;
-                document.getElementById('id_command_input_box').focus();
-            });
-        }
-        else if (mode === "on") {
-            this.socket.on(`${event_name}`, (msg) => {
-
-                clearInterval(this.response_dot_loading);
-                response_row_content.textContent = `${msg}`
-                //re_alive command_input_box
-                document.getElementById('id_text_row_container').style.display = '';
-                document.getElementById('id_command_input_box').disabled = false;
-                document.getElementById('id_command_input_box').focus();
-            });
-        }
-        else {
-            console.log("error no mode pass to catch_server_response()")
-        }
-    }
+    // catch_server_response(event_name, mode) {
+    //     if (mode === "once") {
+    //         return new Promise((resolve, reject) => {
+    //             this.socket.once(`${event_name}`, (msg) => {
+    //                 resolve(msg)
+    //             })
+    //         })
+    //     }
+    // }
     toggle_autocomplete_visibility() {
         document.getElementById('id_command_input_box').focus();
         this.autocomplete_visibility = !this.autocomplete_visibility;
