@@ -1,15 +1,17 @@
-function resolveAfter2Seconds() {
+function catch_server_response() {
     return new Promise(
         (resolve) => {
-            Socket.once("event_name", (msg) => {
-                
+            socket.once("event_name", (msg) => {
+                resolve(msg)   
             })
         }
     );
   }
 
-async function asyncCall() {
-    console.log("calling");
-    const result = await resolveAfter2Seconds();
-    console.log(result);
+async function display_message() {
+    console.log("fetching...");
+    const result = await catch_server_response();
+    console.log(`message received!`)
   }
+
+
