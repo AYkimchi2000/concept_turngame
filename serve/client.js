@@ -14,12 +14,7 @@ socket.on('init_command_tree', (command_tree) => {
 socket.on('change_playername', (username) => {
     document.getElementById('id_prompt_prefix_player_id').innerHTML = `${username}@`
 });
-socket.on('join_room', (room_id) => {
-    if ([...socket.rooms].some(r => r !== socket.id)) { // if client is in any room other than the original
-        socket.emit('joinRoom', room_id);
-    }
 
-});
 // socket.on('server_broadcast', )
 // #endregion
 
@@ -119,7 +114,7 @@ try {
 // #region autocomplete
 
 const autoCompleteJS = new autoComplete({
-    
+    limit: Infinity,
     trigger: () => client_ui.autocomplete_visibility,
     query: (input) => {
         const current_segment = document.getElementById("id_command_input_box").value.split(" ")
@@ -150,7 +145,8 @@ const autoCompleteJS = new autoComplete({
             }
         },
         noResults: true,
-        tabSelect: true
+        tabSelect: true,
+        maxResults: undefined
     },
     resultItem: {
         highlight: true,

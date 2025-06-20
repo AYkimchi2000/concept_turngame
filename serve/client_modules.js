@@ -7,6 +7,7 @@ export class Client_ui {
         this.socket = socket;
         // this.event = event
     }
+
     display_response_client(speaker) {
         this.autocomplete_visibility = false;
         const inputEvent = new Event("input", { bubbles: true });
@@ -49,6 +50,8 @@ export class Client_ui {
                 response_row_content.textContent = 'fetching server response' + '.'.repeat(count);
             }, 500);
             clearInterval(response_dot_loading);
+
+
             this.socket.once(`server_text_response`, (msg) => {
                 response_row_content.textContent = `${msg}`
             });
@@ -66,15 +69,22 @@ export class Client_ui {
     send_command_to_server(event_name) {    
         this.socket.emit(`${event_name}`, document.getElementById("id_command_input_box").value);
     }
-    // catch_server_response(event_name, mode) {
-    //     if (mode === "once") {
-    //         return new Promise((resolve, reject) => {
-    //             this.socket.once(`${event_name}`, (msg) => {
-    //                 resolve(msg)
-    //             })
-    //         })
-    //     }
-    // }
+    catch_server_response(event_name, mode, handler) {
+        if (mode === "once") {
+            return new Promise((resolve) => {
+                this.socket.once(event_name, resolve);
+            });
+        } else if (mode === "on") {
+            this.socket.on(event_name, handler);
+            // optionally return a cleanup function
+            return () => this.socket.off(event_name, handler);
+        }
+    }
+    async display_server_response() {
+    
+    }
+
+
     toggle_autocomplete_visibility() {
         document.getElementById('id_command_input_box').focus();
         this.autocomplete_visibility = !this.autocomplete_visibility;

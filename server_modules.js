@@ -28,32 +28,45 @@ export class CmdTree {
                         
                     }
                 },
-                combat_init: {
-                    alone: () => io.to(socket.id).emit("server_text_response", "you chose to fight alone..."),
-                    party: () => io.to(socket.id).emit("server_text_response", "you chose to fight together..."),
-                },
                 char_select: {
                     clarissa: () => io.to(socket.id).emit("server_text_response", "you selected clarissa as your character"),
                     chloe: () => io.to(socket.id).emit("server_text_response", "you selected chloe as your character"),
                     mia: () => io.to(socket.id).emit("server_text_response", "you selected mia as your character"),
 
                 },
-                enemy_select: {
-                    goblin: () => io.to(socket.id).emit("server_text_response", "you chose to fight a goblin"),
-                    skeleton: () => io.to(socket.id).emit("server_text_response", "you chose to fight a skeleton"),
-                    wolves: () => io.to(socket.id).emit("server_text_response", "you chose to fight wolves"),
-                },
                 party: {
                     create_party: {
-                        '{roomid}': (roomid) => {
+                        '{roomid}': async (roomid) => {
                             //
-                            io.to(socket.id).emit("join_room", roomid)
-                            io.to(socket.id).emit("server_text_response", `created party ${roomid}`)
+                            if ([...socket.rooms].some(r => r !== socket.id)) { // if client is in any room other than the original
+                                try{
+                                    await socket.join(roomid)
+                                    io.to(socket.id).emit("server_text_response", `Successfully created room: ${roomid}`)
+                                }
+                                catch (err) {
+                                    io.to(socket.id).emit("server_text_response", `${err}`)
+                                }
+                            }
+                            else {
+                                io.to(socket.id).emit("server_text_response", `You're already in a room!`)
+                            }
                             
                         }
-                            
+                          
                     },
                     view_member: () => io.to(socket.id).emit("server_text_response", "you are viewing party members"),
+                },
+                emit_objecct: () => io.to(socket.id).emit("server_text_response", {
+                    speaker: "",
+                    data_type: "",
+                    speaker_name: "", 
+                    room_id: "",
+                }),
+                if_block: () => {
+                    let x = 10;
+                    if (x >= 5) {
+                        io.to(socket.id).emit("server_text_response", "if block works as intended")
+                    }
                 }
             }
         };
