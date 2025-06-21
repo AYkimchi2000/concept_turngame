@@ -38,7 +38,7 @@ export class CmdTree {
                     create_party: {
                         '{roomid}': async (roomid) => {
                             //
-                            if ([...socket.rooms].some(r => r !== socket.id)) { // if client is in any room other than the original
+                            if (![...socket.rooms].some(r => r !== socket.id)) { // if client is in any room other than the original
                                 try{
                                     await socket.join(roomid)
                                     io.to(socket.id).emit("server_text_response", `Successfully created room: ${roomid}`)

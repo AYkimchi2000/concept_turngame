@@ -203,12 +203,9 @@ function getSuggestions() { //this gets called everytime there's a value change 
                 node = node[input_command_as_list[traverse_counter]] //traverse using last segment   
                 arg_counter = traverse_counter
             }
-            else if (String(Object.keys(node)).startsWith("{") && String(Object.keys(node)).endsWith("}")) { 
+            else if (String(Object.keys(node)).startsWith("{") && String(Object.keys(node)).endsWith("}")) {
                 // console.log("currently in arg!")
             }
-            // else if (["login", "register"].some(key => key in Object.keys(node))) {
-            //     document.getElementById('id_prompt_prefix_player_id').innerHTML = 'New Content Here';
-            // }
             else {
                 // console.log("failed traversal!")
                 return {
@@ -217,35 +214,35 @@ function getSuggestions() { //this gets called everytime there's a value change 
             }
         }
     }
-    
-        if (node === "function") {
-            // console.log("node is function!")
-            return {
-                "append": "No more subcommand!"
-            }
+
+    if (node === "function") {
+        // console.log("node is function!")
+        return {
+            "append": "No more subcommand!"
         }
-        else if (String(Object.keys(node)).startsWith("{") && String(Object.keys(node)).endsWith("}")) {
-            suggestion_argcount = countArgumentsInString(String(Object.keys(node))) // number of args in suggestion
-            
-            if (current_segment_index - arg_counter <= suggestion_argcount) {
-                return {
-                    "append": Object.keys(node)
-                }
-            }
-            else {
-                return {
-                    "append": "arguments fulfilled!"
-                }
+    }
+    else if (String(Object.keys(node)).startsWith("{") && String(Object.keys(node)).endsWith("}")) {
+        let suggestion_argcount = countArgumentsInString(String(Object.keys(node))) // number of args in suggestion
+
+        if (current_segment_index - arg_counter <= suggestion_argcount) {
+            return {
+                "append": Object.keys(node)
             }
         }
         else {
-            autoCompleteJS.resultItem.highlight = true;
-            if (node) {
-                return {
-                    "data.src": Object.keys(node)
-                }
+            return {
+                "append": "arguments fulfilled!"
             }
         }
+    }
+    else {
+        autoCompleteJS.resultItem.highlight = true;
+        if (node) {
+            return {
+                "data.src": Object.keys(node)
+            }
+        }
+    }
 }
 
 // #endregion
