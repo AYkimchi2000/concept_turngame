@@ -14,8 +14,6 @@ socket.on('init_command_tree', (command_tree) => {
 socket.on('change_playername', (username) => {
     document.getElementById('id_prompt_prefix_player_id').innerHTML = `${username}@`
 });
-
-// socket.on('server_broadcast', )
 // #endregion
 
 // #region global mouse click events 
@@ -58,9 +56,24 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
         event.preventDefault();
         client_ui.toggle_autocomplete_visibility(event)
     }
+    if (event.key === "Delete") { //delete segment
+        event.preventDefault();
+        const input = document.getElementById("id_command_input_box");
+        const { selectionStart: start, selectionEnd: end, value } = input;
 
+        if (start !== end) {
+            input.value = value.slice(0, start) + value.slice(end);
+            input.selectionStart = input.selectionEnd = start;
+        } else {
+            const left = value.slice(0, start);
+            const match = left.match(/(\w+|\W+)?$/);
+            const delStart = match ? start - match[0].length : start - 1;
+            input.value = value.slice(0, delStart) + value.slice(end);
+            input.selectionStart = input.selectionEnd = delStart;
+        }
 
-    // #region up down arrow navigate history
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      }
     if (event.key === "PageUp" && client_ui.history_index > 0) {
         event.preventDefault();
         client_ui.history_index--;
@@ -77,7 +90,6 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
         document.getElementById("id_command_input_box").dispatchEvent(inputEvent);// force re-render by sending a null keypress event
         return;
     }
-    // #endregion
 
 });
 // #endregion
@@ -246,6 +258,3 @@ function getSuggestions() { //this gets called everytime there's a value change 
 }
 
 // #endregion
-
-// if user currently in the login tree, open event listener.
-// else, close event listener.

@@ -1,11 +1,13 @@
 export class Client_ui {
-    constructor(socket) {
+    constructor(socket, cli_table) {
         this.autocomplete_visibility = false;
         this.command_history = [];
         this.history_index = 0;
         // this.io = io;
-        this.socket = socket;
         // this.event = event
+        this.socket = socket;
+        this.cli_table = cli_table;
+
     }
 
     display_response_client(speaker) {
@@ -31,7 +33,7 @@ export class Client_ui {
             //construct server response row element 
             const response_row_container = document.createElement('div');
             const response_row_prefix = document.createElement('div');
-            const response_row_content = document.createElement('div');
+            const response_row_content = document.createElement('pre');
 
             response_row_container.classList.add('response_row_container');
             response_row_prefix.classList.add('response_prefix_container');
@@ -53,8 +55,11 @@ export class Client_ui {
 
 
             this.socket.once(`server_text_response`, (msg) => {
-                response_row_content.textContent = `${msg}`
+                // const parsed_msg = JSON.parse(msg)
+                console.log(`msg data type is ${typeof msg}`)
+                response_row_content.textContent = msg;
             });
+
             document.getElementById('id_text_row_container').style.display = '';
             document.getElementById('id_command_input_box').disabled = false;
             document.getElementById('id_command_input_box').focus();

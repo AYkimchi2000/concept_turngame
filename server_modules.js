@@ -1,20 +1,22 @@
 export class Server_States {
-    constructor() {
+    constructor(io, socket) {
         this.server_online_player_count = 10;
         this.server_online_party_list = 40;
+        this.server_existing_parties = {};
     }
 }
 export class UserCred { 
     register_user(username, password) {
-        console.log(`Registering user: ${username} with password: ${password}`);
+        // console.log(`Registering user: ${username} with password: ${password}`);
         return true;
     }
 }
 export class CmdTree {
-    constructor(io, socket, gamestate, combat) { 
+    constructor(io, socket, server_state_instance_arg, cli_table, gamestate, combat) { 
         this.userCred = new UserCred(); 
         this.io = io; 
         this.socket = socket;
+        this.server_state_instance = server_state_instance_arg
         this.test = {
             test: {
                 swap: () => {
@@ -38,9 +40,10 @@ export class CmdTree {
                     create_party: {
                         '{roomid}': async (roomid) => {
                             //
-                            if (![...socket.rooms].some(r => r !== socket.id)) { // if client is in any room other than the original
+                            if (![...socket.rooms].some(r => r !== socket.id)) { // if client is in any room other than the original, spits false 
                                 try{
                                     await socket.join(roomid)
+                                    this.server_state_instance.server_existing_parties[roomid] =  ""
                                     io.to(socket.id).emit("server_text_response", `Successfully created room: ${roomid}`)
                                 }
                                 catch (err) {
@@ -52,9 +55,60 @@ export class CmdTree {
                             }
                             
                         }
-                          
                     },
-                    view_member: () => io.to(socket.id).emit("server_text_response", "you are viewing party members"),
+                    join_party: {
+                        '{roomid}': async (roomid) => {
+                            //
+                            if (![...socket.rooms].some(r => r !== socket.id)) { // if client is in any room other than the original, spits false 
+                                try {
+                                    await socket.join(roomid)
+
+                                    io.to(socket.id).emit("server_text_response", `Successfully created room: ${roomid}`)
+                                }
+                                catch (err) {
+                                    io.to(socket.id).emit("server_text_response", `${err}`)
+                                }
+                            }
+                            else {
+                                io.to(socket.id).emit("server_text_response", `You're already in a room!`)
+                            }
+
+                        }
+                    },
+                    leave_current_party: async () => {
+                        if (![...socket.rooms].some(r => r !== socket.id)) { 
+                            try {
+                                await socket.leave(roomid)
+                                io.to(socket.id).emit("server_text_response", `You left the room: ${roomid}`)
+                            }
+                            catch (err) {
+                                io.to(socket.id).emit("server_text_response", `${err}`)
+                            }
+
+                        }
+                    },
+                    view_available_party: () => {
+                        const available_party_table = new cli_table();
+                        available_party_table.options.head = ['partyname', 'member#'];
+                        for (const [key, value] of Object.entries(this.server_state_instance.server_existing_parties)) {
+                            available_party_table.push([key, value]);
+                          }
+
+
+                        io.to(socket.id).emit("server_text_response", )
+                    },
+                    view_party_member: async () => { 
+                         if ([...socket.rooms].some(r => r !== socket.id)) { 
+                            const room = [...socket.rooms].filter(r => r !== socket.id);
+                            const party_member_sockets = await io.in(room).fetchSockets();
+                            const sockets_stringify = party_member_sockets.map(s => s.id).join(', ');
+                            
+                            io.to(socket.id).emit("server_text_response", `${sockets_stringify}`)
+                         }
+                         else {
+                             io.to(socket.id).emit("server_text_response", `you are not in a party!`)
+                         }
+                    },
                 },
                 emit_objecct: () => io.to(socket.id).emit("server_text_response", {
                     speaker: "",

@@ -5,13 +5,15 @@ import { createServer } from 'node:http';
 // import { join } from 'node:path'; 
 import { Server } from 'socket.io'; 
 import { Command } from 'commander'; 
-import { CmdTree } from './server_modules.js'
+import { CmdTree, Server_States } from './server_modules.js'
+import Table from 'cli-table3';
 
 // Instantiations (these remain the same)
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
-const program = new Command();
+const states_server_shared = new Server_States();
+const cli_table = new Table()
 
 
 const help_descriptions = {
@@ -34,7 +36,7 @@ function buildCommands(name, tree) {
   // }
   for (const key in tree) {
     const val = tree[key];  
-    console.log(`this is val: ${val}`)
+    // console.log(`this is val: ${val}`)
     if (typeof val === 'function') { //execute if traversed to functions
       cmd.command(key)
         // .description(descriptions[key] || '') 
@@ -74,8 +76,8 @@ app.use(express.static('serve'));
 
 
 io.on('connection', (socket) => {
-  console.log(`user ${socket.id} connected`);
-  const cmdtree = new CmdTree(io, socket);
+  // console.log(`user ${socket.id} connected`);
+  const cmdtree = new CmdTree(io, socket, states_server_shared, cli_table);
 
 
   socket.on('joinRoom', (room_id) => {
@@ -83,7 +85,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log(`user ${socket.id} disconnected`);
+    // console.log(`user ${socket.id} disconnected`);
   });
 
   io.to(socket.id).emit("init_command_tree", cmdtree.deepCloneAndModify(cmdtree.current)) //initial command tree
@@ -112,33 +114,6 @@ io.on('connection', (socket) => {
     
   });
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 server.listen(3000, () => {
   console.log('server running at http://localhost:3000');
