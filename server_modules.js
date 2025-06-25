@@ -88,14 +88,12 @@ export class CmdTree {
                         }
                     },
                     view_available_party: () => {
-                        const available_party_table = new cli_table();
-                        available_party_table.options.head = ['partyname', 'member#'];
+                        const table = new MyCLITable({ head: ['party_name', 'member_count'] });
                         for (const [key, value] of Object.entries(this.server_state_instance.server_existing_parties)) {
-                            available_party_table.push([key, value]);
-                          }
+                            table.push([key, value]);
+                        }
 
-
-                        io.to(socket.id).emit("server_text_response", )
+                        io.to(socket.id).emit("server_text_response", table.toString())
                     },
                     view_party_member: async () => { 
                          if ([...socket.rooms].some(r => r !== socket.id)) { 
@@ -311,6 +309,44 @@ export class Gamestate {
         this.state2 = false;
     }
 
+}
+
+export class MyCLITable {
+    constructor(options = {}) {
+        this.headers = options.head || [];
+        this.rows = [];
+    }
+
+    push(row) {
+        this.rows.push(row);
+    }
+
+    toString() {
+        const allRows = [this.headers, ...this.rows];
+        const colWidths = this.headers.map((_, i) =>
+            Math.max(...allRows.map(row => (row[i] ? row[i].toString().length : 0)))
+        );
+
+        const drawLine = (charL, charM, charR, charH) =>
+            charL + colWidths.map(w => charH.repeat(w + 2)).join(charM) + charR;
+
+        const drawRow = row =>
+            '│ ' +
+            row.map((cell, i) => (cell || '').toString().padEnd(colWidths[i]) + ' ').join('│ ') +
+            '│';
+
+        const top = drawLine('┌', '┬', '┐', '─');
+        const mid = drawLine('├', '┼', '┤', '─');
+        const bot = drawLine('└', '┴', '┘', '─');
+
+        const output = [top, drawRow(this.headers), mid];
+        for (const row of this.rows) {
+            output.push(drawRow(row));
+        }
+        output.push(bot);
+
+        return output.join('\n');
+    }
 }
 
 // Example usage

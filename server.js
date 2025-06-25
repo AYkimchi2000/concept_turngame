@@ -13,7 +13,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server);
 const states_server_shared = new Server_States();
-const cli_table = new Table()
+
 
 
 const help_descriptions = {
@@ -77,7 +77,7 @@ app.use(express.static('serve'));
 
 io.on('connection', (socket) => {
   // console.log(`user ${socket.id} connected`);
-  const cmdtree = new CmdTree(io, socket, states_server_shared, cli_table);
+  const cmdtree = new CmdTree(io, socket, states_server_shared, Table);
 
 
   socket.on('joinRoom', (room_id) => {
