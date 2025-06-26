@@ -49,9 +49,12 @@ document.getElementById("id_command_input_box").addEventListener("keydown", (eve
             client_ui.history_index = client_ui.command_history.length;
             client_ui.display_response_client("Server")
         }
-
-
     }
+
+    if (event.key === "Tab") {
+        event.preventDefault();
+    }
+
     if (event.key === "\\") {
         event.preventDefault();
         client_ui.toggle_autocomplete_visibility(event)

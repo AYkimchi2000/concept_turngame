@@ -5,6 +5,16 @@ export class Server_States {
         this.server_existing_parties = {};
     }
 }
+export class Client_States {
+    constructor() {
+        this.character_name = ""
+        this.character_current_stats = ""
+        this.charactre_inv = ""
+        this.character_default_stats = ""
+    }
+}
+
+
 export class UserCred { 
     register_user(username, password) {
         // console.log(`Registering user: ${username} with password: ${password}`);
@@ -266,7 +276,7 @@ export class Combat {
     }
     enqueue(item) {
         this.queue_holder.push(item);
-        this.queue_holder.sort((a, b) => a.time - b.time);
+        this.queue_holder.sort((a, b) => a.time - b.time); //
     }
     dequeue() {
         return this.queue_holder.shift();
@@ -281,14 +291,13 @@ export class Combat {
     }
     round_seq_calc(units, actions = 5) {
         const combatLog = [];
-
         for (const unit of units) {
             const timeToAct = 25 / unit.speed;
             this.enqueue({ unit, time: timeToAct });
         }
 
-        while (combatLog.length < actions && !this.isEmpty()) { //
-            const { unit, time } = this.dequeue();
+        while (combatLog.length < actions && !this.isEmpty()) { 
+            const { unit, time } = this.dequeue(); 
             combatLog.push(unit.name);
 
             // Schedule next turn for this unit
@@ -297,10 +306,11 @@ export class Combat {
         }
         return combatLog;
     }
-    combat_loop() {
-        //while exit combat = false
-            
-    }
+    // 1. collect participant current data
+    //      get names from party members
+    //      correlate party member names to characters, and to 
+    // 2. calculate time/speed and put them in a queue, sort them
+    // 3. send prompt based on the 
 
 }
 export class Gamestate {
@@ -310,17 +320,14 @@ export class Gamestate {
     }
 
 }
-
 export class MyCLITable {
     constructor(options = {}) {
         this.headers = options.head || [];
         this.rows = [];
     }
-
     push(row) {
         this.rows.push(row);
     }
-
     toString() {
         const allRows = [this.headers, ...this.rows];
         const colWidths = this.headers.map((_, i) =>
