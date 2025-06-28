@@ -31,9 +31,10 @@ document.addEventListener("keydown",  (event)=> {
 
     //toggle bottom panel
     if (event.key === "`") {
-        
+        event.preventDefault();
+        client_ui.typed_effect_visibility = !client_ui.typed_effect_visibility
+        console.log("successfully toggled typed.js visibility")
     }
-
 
 
 });
@@ -41,7 +42,6 @@ document.addEventListener("keydown",  (event)=> {
 
 // #region input box keypress events
 document.getElementById("id_command_input_box").addEventListener("keydown", (event) => {
-
     if (event.key === "Enter") {
         event.preventDefault();
         if (document.getElementById("id_command_input_box").value.trim()) {

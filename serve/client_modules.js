@@ -1,6 +1,7 @@
 
 export class Client_ui {
     constructor(socket, Typed) {
+        this.typed_effect_visibility = true;
         this.autocomplete_visibility = false;
         this.command_history = [];
         this.history_index = 0;
@@ -65,11 +66,16 @@ export class Client_ui {
                 // const parsed_msg = JSON.parse(msg)
                 // console.log(`msg data type is ${typeof msg}`)
                 // response_row_content.textContent = msg;
-                new this.typed_js(response_row_content, {
-                    strings: [msg],
-                    typeSpeed: 30,
-                    showCursor: false
-                });
+                if (this.typed_effect_visibility === true){
+                    new this.typed_js(response_row_content, {
+                        strings: [msg],
+                        typeSpeed: 15,
+                        showCursor: false
+                    });
+                }
+                else {
+                    response_row_content.textContent = msg
+                }
             });
 
         }
@@ -87,9 +93,6 @@ export class Client_ui {
             // optionally return a cleanup function
             return () => this.socket.off(event_name, handler);
         }
-    }
-    async display_server_response() {
-    
     }
 
 
