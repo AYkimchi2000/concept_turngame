@@ -7,7 +7,7 @@ export class Client_ui {
         // this.io = io;
         // this.event = event
         this.socket = socket;
-
+        this.typed_js = Typed
     }
 
     display_response_client(speaker) {
@@ -53,13 +53,6 @@ export class Client_ui {
             }, 500);
             clearInterval(response_dot_loading);
 
-
-            this.socket.once(`server_text_response`, (msg) => {
-                // const parsed_msg = JSON.parse(msg)
-                // console.log(`msg data type is ${typeof msg}`)
-                response_row_content.textContent = msg;
-            });
-
             document.getElementById('id_text_row_container').style.display = '';
             document.getElementById('id_command_input_box').disabled = false;
             document.getElementById('id_command_input_box').focus();
@@ -67,10 +60,16 @@ export class Client_ui {
             document.getElementById("id_text_interface_container").insertBefore(clone_of_previous_textrow, document.getElementById("id_text_row_container")); // insert previous text row element
             document.getElementById("id_text_interface_container").insertBefore(response_row_container, document.getElementById("id_text_row_container")); // insert server response row element
             document.getElementById('id_command_input_box').value = ""; // clear text input box
-            new Typed(response_row_content, {
-                strings: [msg],
-                typeSpeed: 30,
-                showCursor: false
+
+            this.socket.once(`server_text_response`, (msg) => {
+                // const parsed_msg = JSON.parse(msg)
+                // console.log(`msg data type is ${typeof msg}`)
+                // response_row_content.textContent = msg;
+                new this.typed_js(response_row_content, {
+                    strings: [msg],
+                    typeSpeed: 30,
+                    showCursor: false
+                });
             });
 
         }
