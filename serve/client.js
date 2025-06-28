@@ -1,7 +1,8 @@
 // #region imports init
 import { Client_ui } from "./client_modules.js";
+import Typed from './typed.js'
 const socket = io();
-const client_ui = new Client_ui(socket);
+const client_ui = new Client_ui(socket, Typed);
 
 
 // #region global variables

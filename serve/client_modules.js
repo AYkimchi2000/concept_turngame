@@ -1,12 +1,12 @@
+
 export class Client_ui {
-    constructor(socket, cli_table) {
+    constructor(socket, Typed) {
         this.autocomplete_visibility = false;
         this.command_history = [];
         this.history_index = 0;
         // this.io = io;
         // this.event = event
         this.socket = socket;
-        this.cli_table = cli_table;
 
     }
 
@@ -56,7 +56,7 @@ export class Client_ui {
 
             this.socket.once(`server_text_response`, (msg) => {
                 // const parsed_msg = JSON.parse(msg)
-                console.log(`msg data type is ${typeof msg}`)
+                // console.log(`msg data type is ${typeof msg}`)
                 response_row_content.textContent = msg;
             });
 
@@ -67,7 +67,11 @@ export class Client_ui {
             document.getElementById("id_text_interface_container").insertBefore(clone_of_previous_textrow, document.getElementById("id_text_row_container")); // insert previous text row element
             document.getElementById("id_text_interface_container").insertBefore(response_row_container, document.getElementById("id_text_row_container")); // insert server response row element
             document.getElementById('id_command_input_box').value = ""; // clear text input box
-
+            new Typed(response_row_content, {
+                strings: [msg],
+                typeSpeed: 30,
+                showCursor: false
+            });
 
         }
     }

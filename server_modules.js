@@ -18,6 +18,9 @@ export class UserCred {
         // console.log(`Registering user: ${username} with password: ${password}`);
         return true;
     }
+    login_user() {
+        
+    }
 }
 export class CmdTree {
     constructor(io, socket, server_state_instance_arg, cli_table, gamestate, combat) { 
