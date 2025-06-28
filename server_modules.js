@@ -13,8 +13,6 @@ export class Client_States {
         this.character_default_stats = ""
     }
 }
-
-
 export class UserCred { 
     register_user(username, password) {
         // console.log(`Registering user: ${username} with password: ${password}`);
@@ -271,8 +269,18 @@ export class CmdTree {
 export class Combat {
     constructor() {
         this.queue_holder = [];
+        this.combat_log = [];
         this.all_participant_id = []; //this is added in externally with instancename.all_participant_id.push({object})
-        this.round_seq_preview = [];
+        this.placeholder_player_data = [
+            { id: 'Player1', speed: 10 },
+            { id: 'Player2', speed: 15 }
+        ]
+        this.placeholder_enemy_data = [
+            { id: 'Enemy1', speed: 12 },
+            { id: 'Enemy2', speed: 12 },
+            { id: 'Enemy2', speed: 12 },
+        ]
+        this.all_unit_speed = []
     }
     enqueue(item) {
         this.queue_holder.push(item);
@@ -283,11 +291,6 @@ export class Combat {
     }
     isEmpty() {  // if this.queue_holder has no elements. It returns true if this.queue_holder.length is 0, otherwise false.
         return this.queue_holder.length === 0;
-    }
-    participants_current_stats() {
-        for (let x in this.all_participant_id){
-            
-        }
     }
     round_seq_calc(units, actions = 5) {
         const combatLog = [];
@@ -306,10 +309,83 @@ export class Combat {
         }
         return combatLog;
     }
-    // 1. collect participant current data
-    //      get names from party members
-    //      correlate party member names to characters, and to 
-    // 2. calculate time/speed and put them in a queue, sort them
+
+
+
+
+
+
+
+
+
+
+
+    
+    next_unit_to_combat_log(party_units, enemy_units){
+        function calculate_speed_time(participant_data) { //arg is list with character data objects {}
+            const transformed = participant_data.map(obj => {
+                const [name, speed] = Object.entries(obj)[0];
+                return { [name]: 20 / speed }
+            });
+            return transformed
+        }
+        function add_previous_turn(speed_time_data, combat_log) {
+            for (const entry of combat_log) {
+                const [key, value] = Object.entries(entry)[0];
+
+                for (const speed_entry of speed_time_data) {
+                    if (speed_entry.hasOwnProperty(key)) {
+                        speed_entry[key] += value;
+                        break; // no need to keep looking after a match
+                    }
+                }
+            }
+        }
+        function sort_fastest(current_round_speed_time_list) {
+            current_round_speed_time_list.sort((a, b) => Object.values(a)[0] - Object.values(b)[0]);
+            return sorted_speed_time_list
+        }
+
+        // party_units_data = correlate_unit_data(party_units) // id to data
+        // enemy_units_data = correlate_unit_data(enemy_units) //id to data
+        this.all_unit_speed = [
+            ...this.placeholder_player_data,
+            ...this.placeholder_enemy_data
+        ];
+        let speed_time_list = calculate_speed_time(this.all_unit_speed)
+        let cumulative_speed_time_list = add_previous_turn(speed_time_list, this.combat_log)
+        let sorted_speed_time_list = sort_fastest(cumulative_speed_time_list)
+        const { unit, time } = sorted_speed_time_list.shift()
+        this.combat_log.push(unit.name);
+        
+
+
+        // _holder_seq = calculate_speed_time(participant_data)
+        // _holder_seq = add_combat_log_nums(holder_seq)
+        // _holder_seq.sort()
+        // the left most in combat_seq gets pushed into combat_log
+        // then the corresponding index unit in combat_log gets prompted for action
+
+
+
+
+
+
+        // let in_combat = true;
+        while (in_combat = true) {
+            //something
+
+        }
+
+    }
+
+ 
+
+
+
+
+
+
     // 3. send prompt based on the 
 
 }
@@ -353,6 +429,11 @@ export class MyCLITable {
         output.push(bot);
 
         return output.join('\n');
+    }
+}
+export class Unit {
+    constructor(unit_data){
+
     }
 }
 
